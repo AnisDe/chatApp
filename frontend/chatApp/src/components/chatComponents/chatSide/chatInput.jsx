@@ -16,8 +16,9 @@ const ChatInput = ({ text, setText, onSend, onTyping }) => {
         value={text}
         onChange={(e) => {
           setText(e.target.value);
-          onTyping(); // 👈 triggers typing event
+          onTyping(); 
         }}
+         onKeyDown={handleKeyDown}
       />
 
       <button onClick={onSend} className="send-button">
