@@ -1,3 +1,4 @@
+// components/sideBar/Sidebar.jsx
 import React, { useState, useEffect } from "react";
 import "./Sidebar.css";
 import SearchInput from "./searchInput";
@@ -12,22 +13,14 @@ const Sidebar = ({
   onSelectUser,
   currentUserId,
   currentChatUser,
+  onlineUsers,
+  loading,
+  chatHistory,
 }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [filteredUsers, setFilteredUsers] = useState([]);
-  const [chatHistory, setChatHistory] = useState([]);
 
-  // Load chat history
-  useEffect(() => {
-    if (currentUserId) {
-      axiosInstance
-        .get(`/messages/history/${currentUserId}`)
-        .then((res) => setChatHistory(res.data))
-        .catch((err) => console.error("Failed to fetch chat history:", err));
-    }
-  }, [currentUserId]);
-
-  // Filter users based on search term
+  // ✅ Filter users based on search term
   useEffect(() => {
     if (searchTerm.trim() === "") {
       setFilteredUsers([]);
@@ -64,6 +57,7 @@ const Sidebar = ({
           chatHistory={chatHistory}
           currentChatUser={currentChatUser}
           onSelectUser={onSelectUser}
+          onlineUsers={onlineUsers}
         />
       </div>
     </div>

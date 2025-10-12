@@ -83,7 +83,6 @@ const getUserFromSession = (req) => req.session?.passport?.user;
 // Initialize socket logic
 initSocket(io, getUserFromSession);
 app.use((req, res, next) => {
-  console.log(`Request received: ${req.method} ${req.url}`);
   next();
 });
 
