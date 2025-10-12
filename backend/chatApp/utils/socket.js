@@ -49,6 +49,18 @@ const initSocket = (io, getUserFromSession) => {
         io.emit("online_users", Array.from(onlineUsers.keys()));
     
       });
+
+       socket.on("typing", ({ to, from }) => {
+    if (to) {
+      io.to(to).emit("user_typing", { from });
+    }
+  });
+
+  socket.on("stop_typing", ({ to, from }) => {
+    if (to) {
+      io.to(to).emit("user_stop_typing", { from });
+    }
+  });
     } catch (err) {
       console.error("Socket connection error:", err);
       socket.disconnect();

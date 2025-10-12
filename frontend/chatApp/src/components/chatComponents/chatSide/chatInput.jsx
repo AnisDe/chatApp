@@ -1,6 +1,6 @@
 import React from "react";
 
-const ChatInput = ({ text, setText, onSend }) => {
+const ChatInput = ({ text, setText, onSend, onTyping }) => {
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       onSend();
@@ -10,11 +10,16 @@ const ChatInput = ({ text, setText, onSend }) => {
   return (
     <div className="chat-input-wrapper">
       <input
+        id="chat-input"
+        type="text"
+        placeholder="Type a message..."
         value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="Type a message"
-        onKeyDown={handleKeyDown}
+        onChange={(e) => {
+          setText(e.target.value);
+          onTyping(); // 👈 triggers typing event
+        }}
       />
+
       <button onClick={onSend} className="send-button">
         Send
       </button>
