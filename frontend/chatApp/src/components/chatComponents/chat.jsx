@@ -5,6 +5,7 @@ import { ToastContainer, toast } from "react-toastify";
 import axiosInstance from "../../lib/axios";
 import Sidebar from "./sideBar/sideBar";
 import ChatWindow from "./chatSide/chatWindow";
+import { useChatStore } from "../../store/chatStore";
 import "react-toastify/dist/ReactToastify.css";
 import "./chatPage.css";
 
@@ -18,7 +19,7 @@ const TOAST_OPTIONS = {
 
 const Chat = ({ currentUserId }) => {
   const [socket, setSocket] = useState(null);
-  const [currentChatUser, setCurrentChatUser] = useState(null);
+  const { currentChatUser, setCurrentChatUser } = useChatStore();
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [users, setUsers] = useState([]);
@@ -72,6 +73,17 @@ const Chat = ({ currentUserId }) => {
       .catch((err) => console.error("Failed to fetch chat history:", err));
   }, [currentUserId]);
 
+  useEffect(() => {
+    if (currentChatUser && currentUserId) {
+      // Automatically reload last messages
+      axiosInstance
+        .get("/messages", {
+          params: { user1: currentUserId, user2: currentChatUser._id },
+        })
+        .then((res) => setMessages(res.data))
+        .catch((err) => console.error("Failed to restore chat:", err));
+    }
+  }, [currentUserId, currentChatUser]);
   /** ---------------------------
    *  SOCKET SETUP
    * --------------------------- */
