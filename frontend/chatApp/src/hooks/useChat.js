@@ -82,35 +82,46 @@ export const useChat = (currentUserId) => {
 
   // Socket event setup
   const setupSocketEvents = useCallback(() => {
-    if (!socket) return;
+  if (!socket) return;
 
-    const handlePrivateMessage = (msg) => {
-      const senderId = msg.sender._id || msg.sender;
-      const receiverId = msg.receiver?._id || msg.receiver;
-      const currentChat = currentChatUserRef.current;
+  const handlePrivateMessage = (msg) => {
+    const senderId = msg.sender._id || msg.sender;
+    const receiverId = msg.receiver?._id || msg.receiver;
+    const currentChat = currentChatUserRef.current;
 
-      // ✅ Only add the message to the current chat window
-      if (
-        currentChat &&
-        (senderId === currentChat._id || receiverId === currentChat._id)
-      ) {
-        addMessage(msg);
-      }
+    // ✅ Only display message in chat if it's for the active conversation
+    if (
+      currentChat &&
+      (senderId === currentChat._id || receiverId === currentChat._id)
+    ) {
+      addMessage(msg);
+    }
 
-      // ✅ Always update the chat history (sidebar preview)
-      handleReceivedMessage(msg);
-    };
+    // ✅ Always update sidebar history
+    handleReceivedMessage(msg);
+  };
 
-    // Register socket listeners
-    on("private_message", handlePrivateMessage);
-    on("notification", handleNotification);
+  const handleNotificationWrapper = (notif) => {
+    const currentChat = currentChatUserRef.current;
+    const senderId = notif.from;
 
-    // Cleanup to avoid duplicate listeners
-    return () => {
-      off("private_message", handlePrivateMessage);
-      off("notification", handleNotification);
-    };
-  }, [socket, on, off, addMessage, handleReceivedMessage, handleNotification]);
+    // ✅ Only show notification if not already chatting with that user
+    if (!currentChat || currentChat._id !== senderId) {
+      handleNotification(notif);
+    }
+  };
+
+  // Register socket events
+  on("private_message", handlePrivateMessage);
+  on("notification", handleNotificationWrapper);
+
+  // Cleanup
+  return () => {
+    off("private_message", handlePrivateMessage);
+    off("notification", handleNotificationWrapper);
+  };
+}, [socket, on, off, addMessage, handleReceivedMessage, handleNotification]);
+
 
   // Setup and cleanup socket events
   useEffect(() => {
