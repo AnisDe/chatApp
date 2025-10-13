@@ -16,74 +16,96 @@ const TOAST_OPTIONS = {
 
 export const useChat = (currentUserId) => {
   const { currentChatUser, setCurrentChatUser } = useChatStore();
-  
+
   // Refs for current values
   const currentChatUserRef = useRef(currentChatUser);
   currentChatUserRef.current = currentChatUser;
 
   // Compose all hooks
-  const { chatHistory, updateChatHistory, handleReceivedMessage } = useChatHistory(currentUserId);
+  const { chatHistory, updateChatHistory, handleReceivedMessage } =
+    useChatHistory(currentUserId);
   const { users, searchTerm, setSearchTerm, loading } = useUserSearch();
-  const { messages, setMessages, addMessage } = useMessages(currentUserId, currentChatUser);
-  const { 
-    socket, 
-    onlineUsers, 
-    typingUser, 
+  const { messages, setMessages, addMessage } = useMessages(
+    currentUserId,
+    currentChatUser,
+  );
+  const {
+    socket,
+    onlineUsers,
+    typingUser,
     isConnected,
-    on, 
+    on,
     off,
-    emit, 
-    startTyping, 
-    stopTyping 
+    emit,
+    startTyping,
+    stopTyping,
   } = useSocket(currentUserId, currentChatUserRef);
 
   // Handle user selection from notification
-  const selectUserFromNotification = useCallback((userId, username) => {
-    // Find the user in chat history or search for them
-    const userFromHistory = chatHistory.find(u => u._id === userId);
-    if (userFromHistory) {
-      handleSelectUser(userFromHistory);
-    } else {
-      // Create a temporary user object if not found in history
-      const tempUser = {
-        _id: userId,
-        username: username,
-        lastMessage: "",
-        lastTimestamp: new Date().toISOString(),
-      };
-      handleSelectUser(tempUser);
-    }
-  }, [chatHistory]);
+  const selectUserFromNotification = useCallback(
+    (userId, username) => {
+      // Find the user in chat history or search for them
+      const userFromHistory = chatHistory.find((u) => u._id === userId);
+      if (userFromHistory) {
+        handleSelectUser(userFromHistory);
+      } else {
+        // Create a temporary user object if not found in history
+        const tempUser = {
+          _id: userId,
+          username: username,
+          lastMessage: "",
+          lastTimestamp: new Date().toISOString(),
+        };
+        handleSelectUser(tempUser);
+      }
+    },
+    [chatHistory],
+  );
 
   // Notification handler
-  const handleNotification = useCallback((data) => {
-    const { sender, messagePreview, fromUsername, from } = data;
-    const chatUser = currentChatUserRef.current;
-    
-    // Show notification only if the message is not from the current chat user
-    if (!chatUser || chatUser._id !== sender) {
-      toast.info(`New message from ${fromUsername}: ${messagePreview}`, {
-        ...TOAST_OPTIONS,
-        onClick: () => selectUserFromNotification(from || sender, fromUsername),
-      });
-    }
-  }, [selectUserFromNotification]);
+  const handleNotification = useCallback(
+    (data) => {
+      const { sender, messagePreview, fromUsername, from } = data;
+      const chatUser = currentChatUserRef.current;
+
+      // Show notification only if the message is not from the current chat user
+      if (!chatUser || chatUser._id !== sender) {
+        toast.info(`New message from ${fromUsername}: ${messagePreview}`, {
+          ...TOAST_OPTIONS,
+          onClick: () =>
+            selectUserFromNotification(from || sender, fromUsername),
+        });
+      }
+    },
+    [selectUserFromNotification],
+  );
 
   // Socket event setup
   const setupSocketEvents = useCallback(() => {
     if (!socket) return;
 
-    // Private messages handler
     const handlePrivateMessage = (msg) => {
-      addMessage(msg);
+      const senderId = msg.sender._id || msg.sender;
+      const receiverId = msg.receiver?._id || msg.receiver;
+      const currentChat = currentChatUserRef.current;
+
+      // ✅ Only add the message to the current chat window
+      if (
+        currentChat &&
+        (senderId === currentChat._id || receiverId === currentChat._id)
+      ) {
+        addMessage(msg);
+      }
+
+      // ✅ Always update the chat history (sidebar preview)
       handleReceivedMessage(msg);
     };
 
-    // Register event handlers
+    // Register socket listeners
     on("private_message", handlePrivateMessage);
     on("notification", handleNotification);
 
-    // Cleanup function
+    // Cleanup to avoid duplicate listeners
     return () => {
       off("private_message", handlePrivateMessage);
       off("notification", handleNotification);
@@ -102,44 +124,57 @@ export const useChat = (currentUserId) => {
       if (currentChatUser && currentUserId) {
         stopTyping({
           to: currentChatUser._id,
-          from: currentUserId
+          from: currentUserId,
         });
       }
     };
   }, [currentChatUser, currentUserId, stopTyping]);
 
   // User selection
-  const handleSelectUser = useCallback((user) => {
-    setCurrentChatUser(user);
-    setMessages([]);
-  }, [setCurrentChatUser, setMessages]);
+  const handleSelectUser = useCallback(
+    (user) => {
+      setCurrentChatUser(user);
+      setMessages([]);
+    },
+    [setCurrentChatUser, setMessages],
+  );
 
   // Send message
-  const handleSend = useCallback((text) => {
-    if (!text.trim() || !currentChatUser) return;
+  const handleSend = useCallback(
+    (text) => {
+      if (!text.trim() || !currentChatUser) return;
 
-    emit("private_message", { 
-      to: currentChatUser._id, 
-      message: text 
-    });
+      emit("private_message", {
+        to: currentChatUser._id,
+        message: text,
+      });
 
-    const newMessage = {
-      sender: currentUserId,
-      receiver: currentChatUser._id,
-      message: text,
-    };
+      const newMessage = {
+        sender: currentUserId,
+        receiver: currentChatUser._id,
+        message: text,
+      };
 
-    addMessage(newMessage);
-    updateChatHistory(currentChatUser._id, currentChatUser.username, text);
-    
-    // Stop typing when message is sent
-    stopTyping({ 
-      to: currentChatUser._id, 
-      from: currentUserId 
-    });
+      addMessage(newMessage);
+      updateChatHistory(currentChatUser._id, currentChatUser.username, text);
 
-    return newMessage;
-  }, [currentChatUser, currentUserId, emit, addMessage, updateChatHistory, stopTyping]);
+      // Stop typing when message is sent
+      stopTyping({
+        to: currentChatUser._id,
+        from: currentUserId,
+      });
+
+      return newMessage;
+    },
+    [
+      currentChatUser,
+      currentUserId,
+      emit,
+      addMessage,
+      updateChatHistory,
+      stopTyping,
+    ],
+  );
 
   // Typing handler
   const handleTyping = useCallback(() => {
@@ -162,7 +197,7 @@ export const useChat = (currentUserId) => {
     chatHistory,
     typingUser,
     isConnected,
-    
+
     // Actions
     setCurrentChatUser,
     handleSelectUser,
