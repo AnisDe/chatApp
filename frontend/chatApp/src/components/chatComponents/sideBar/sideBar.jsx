@@ -4,18 +4,18 @@ import "./Sidebar.css";
 import SearchInput from "./searchInput";
 import SearchPopup from "./searchPopup";
 import ChatHistory from "./ChatHistory";
-import axiosInstance from "../../../lib/axios";
 
 const Sidebar = ({
   users,
   searchTerm,
   onSearchChange,
-  onSelectUser,
+  onSelectConversation,
   currentUserId,
-  currentChatUser,
+  currentConversation,
   onlineUsers,
   loading,
   chatHistory,
+  setChatHistory,
 }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -27,7 +27,7 @@ const Sidebar = ({
       setShowPopup(false);
     } else {
       const filtered = users.filter((user) =>
-        user.username.toLowerCase().includes(searchTerm.toLowerCase())
+        user.username.toLowerCase().includes(searchTerm.toLowerCase()),
       );
       setFilteredUsers(filtered);
       setShowPopup(filtered.length > 0);
@@ -40,11 +40,12 @@ const Sidebar = ({
 
       <div className="search-container">
         <SearchInput value={searchTerm} onChange={onSearchChange} />
+
         {showPopup && (
           <SearchPopup
             users={filteredUsers}
             onUserSelect={(user) => {
-              onSelectUser(user);
+              onSelectConversation(user);
               setShowPopup(false);
               onSearchChange("");
             }}
@@ -55,9 +56,11 @@ const Sidebar = ({
       <div className="chat-history">
         <ChatHistory
           chatHistory={chatHistory}
-          currentChatUser={currentChatUser}
-          onSelectUser={onSelectUser}
+          currentConversation={currentConversation}
+          currentUserId={currentUserId}
+          onSelectConversation={onSelectConversation}
           onlineUsers={onlineUsers}
+          setChatHistory={setChatHistory} 
         />
       </div>
     </div>

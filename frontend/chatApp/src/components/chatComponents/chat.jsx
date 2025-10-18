@@ -1,6 +1,6 @@
 // components/Chat.jsx
-import React, { useState, useEffect } from "react";
-import { ToastContainer, toast } from "react-toastify";
+import React, { useState } from "react";
+import { ToastContainer } from "react-toastify";
 import Sidebar from "./sideBar/sideBar";
 import ChatWindow from "./chatSide/chatWindow";
 import { useChat } from "../../hooks/useChat";
@@ -9,10 +9,10 @@ import "./chatPage.css";
 
 const Chat = ({ currentUserId }) => {
   const [text, setText] = useState("");
-  
+
   const {
-    // State
-    currentChatUser,
+    // ✅ State
+    currentConversation,
     messages,
     users,
     searchTerm,
@@ -21,15 +21,15 @@ const Chat = ({ currentUserId }) => {
     chatHistory,
     typingUser,
     isConnected,
-    
-    // Actions
-    handleSelectUser,
+    setChatHistory, // ✅ make sure this is here
+
+    // ✅ Actions
+    handleSelectConversation,
     handleSend: sendMessage,
     handleTyping,
     setSearchTerm,
   } = useChat(currentUserId);
 
-  // Enhanced send handler
   const handleSend = () => {
     if (text.trim()) {
       sendMessage(text);
@@ -37,7 +37,6 @@ const Chat = ({ currentUserId }) => {
     }
   };
 
-  // Enhanced typing handler
   const handleInputTyping = () => {
     handleTyping();
   };
@@ -45,24 +44,25 @@ const Chat = ({ currentUserId }) => {
   return (
     <div className="chat-container">
       <ToastContainer />
-      
+
       <Sidebar
         users={users}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        onSelectUser={handleSelectUser}
+        onSelectConversation={handleSelectConversation}
         currentUserId={currentUserId}
-        currentChatUser={currentChatUser}
+        currentConversation={currentConversation}
         onlineUsers={onlineUsers}
         loading={loading}
         chatHistory={chatHistory}
+        setChatHistory={setChatHistory} // ✅ no more ReferenceError
         connectionStatus={isConnected ? "connected" : "disconnected"}
       />
 
       <ChatWindow
         messages={messages}
         currentUserId={currentUserId}
-        currentChatUser={currentChatUser}
+        currentConversation={currentConversation}
         text={text}
         setText={setText}
         onSend={handleSend}

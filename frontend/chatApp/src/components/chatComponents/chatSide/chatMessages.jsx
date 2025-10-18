@@ -4,7 +4,7 @@ import ChatMessage from "./ChatMessage";
 const ChatMessages = ({
   messages,
   currentUserId,
-  currentChatUser,
+  currentConversation,
   typingUser,
 }) => {
   const messagesEndRef = useRef(null);
@@ -13,21 +13,32 @@ const ChatMessages = ({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typingUser]);
 
+  // 🧠 Find the other participant for display names
+  const otherUser = currentConversation?.participants?.find(
+    (p) => p._id !== currentUserId,
+  );
+
   return (
     <div className="chat-messages">
-      {messages.map((m, i) => (
-        <ChatMessage
-          key={i}
-          message={m}
-          isCurrentUser={m.sender === currentUserId}
-          senderName={
-            m.sender === currentUserId ? "You" : currentChatUser.username
-          }
-        />
-      ))}
+      {messages.map((m, i) => {
+        const isCurrentUser =
+          m.sender?._id === currentUserId || m.sender === currentUserId;
+        const senderName = isCurrentUser
+          ? "You"
+          : m.sender?.username || otherUser?.username || "Unknown";
 
-      {/* ✅ Typing indicator bubble */}
-      {typingUser === currentChatUser?._id && (
+        return (
+          <ChatMessage
+            key={i}
+            message={m}
+            isCurrentUser={isCurrentUser}
+            senderName={senderName}
+          />
+        );
+      })}
+
+      {/* Typing indicator bubble */}
+      {typingUser && otherUser && typingUser === otherUser._id && (
         <div className="message received typing-bubble">
           <div className="dots">
             <span></span>

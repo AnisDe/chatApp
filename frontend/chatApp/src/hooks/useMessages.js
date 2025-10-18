@@ -2,14 +2,14 @@
 import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../lib/axios";
 
-export const useMessages = (currentUserId, currentChatUser) => {
+export const useMessages = (currentConversation) => {
   const [messages, setMessages] = useState([]);
 
-  const loadMessages = useCallback(async (user1, user2) => {
+  // ✅ Load all messages for a conversation
+  const loadMessages = useCallback(async (conversationId) => {
+    if (!conversationId) return;
     try {
-      const res = await axiosInstance.get("/messages", {
-        params: { user1, user2 },
-      });
+      const res = await axiosInstance.get(`/messages/${conversationId}`);
       setMessages(res.data);
     } catch (err) {
       console.error("Failed to fetch messages:", err);
@@ -22,17 +22,17 @@ export const useMessages = (currentUserId, currentChatUser) => {
   }, []);
 
   const addMessage = useCallback((message) => {
-    setMessages(prev => [...prev, message]);
+    setMessages((prev) => [...prev, message]);
   }, []);
 
-  // Load messages when chat user changes
+  // ✅ Fetch messages when conversation changes
   useEffect(() => {
-    if (currentChatUser && currentUserId) {
-      loadMessages(currentUserId, currentChatUser._id);
+    if (currentConversation?._id) {
+      loadMessages(currentConversation._id);
     } else {
       clearMessages();
     }
-  }, [currentUserId, currentChatUser, loadMessages, clearMessages]);
+  }, [currentConversation, loadMessages, clearMessages]);
 
   return {
     messages,

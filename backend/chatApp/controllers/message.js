@@ -1,88 +1,140 @@
-// routes/messages.js
-import express from "express";
-import Message from "../models/message.js";
+// controllers/messages.js
 import mongoose from "mongoose";
-const router = express.Router();
+import Message from "../models/message.js";
+import Conversation from "../models/conversation.js";
 
-// Get all messages between two users
+/**
+ * Get all messages from a specific conversation
+ * GET /messages/:conversationId
+ */
 const getMessages = async (req, res) => {
-   const { user1, user2 } = req.query;
-  console.log("Fetching messages between:", user1, user2);
+  const { conversationId } = req.params;
 
-  if (!user1 || !user2) {
-    return res.status(400).json({ error: "Missing users" });
+  if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+    return res.status(400).json({ error: "Invalid conversation ID" });
   }
 
   try {
-    const messages = await Message.find({
-      $or: [
-        { sender: user1, receiver: user2 },
-        { sender: user2, receiver: user1 },
-      ],
-    }).sort({ createdAt: 1 }); // oldest first
+    const messages = await Message.find({ conversationId })
+      .populate("sender", "username _id")
+      .sort({ createdAt: 1 });
 
     res.json(messages);
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching messages:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-
- const getChatHistory = async (req, res) => {
+/**
+ * Get all conversations for a user (Chat history list)
+ * GET /messages/history/:userId
+ */
+const getChatHistory = async (req, res) => {
   const { userId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ error: "Invalid user ID" });
+  }
+
   try {
-    // Get distinct conversation partners and their last message in one query
-    const messages = await Message.aggregate([
-      {
-        $match: {
-          $or: [{ sender: new mongoose.Types.ObjectId(userId) }, { receiver: new mongoose.Types.ObjectId(userId) }]
-        }
-      },
-      {
-        $sort: { createdAt: -1 }
-      },
-      {
-        $group: {
-          _id: {
-            $cond: [
-              { $eq: ["$sender", new mongoose.Types.ObjectId(userId)] },
-              "$receiver",
-              "$sender"
-            ]
-          },
-          lastMessage: { $first: "$message" },
-          lastMessageDate: { $first: "$createdAt" }
-        }
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "_id",
-          foreignField: "_id",
-          as: "userInfo"
-        }
-      },
-      {
-        $unwind: "$userInfo"
-      },
-      {
-        $project: {
-          _id: "$userInfo._id",
-          username: "$userInfo.username",
-          lastMessage: 1,
-          lastMessageDate: 1
-        }
-      },
-      {
-        $sort: { lastMessageDate: -1 }
-      }
-    ]);
-    
-    res.json(messages);
+    const conversations = await Conversation.find({
+      participants: userId,
+    })
+      .populate({
+        path: "participants",
+        select: "username _id",
+      })
+      .populate({
+        path: "lastMessage",
+        select: "message sender createdAt",
+        populate: { path: "sender", select: "username _id" },
+      })
+      .sort({ lastMessageAt: -1 });
+
+    res.json(conversations);
   } catch (err) {
+    console.error("Error fetching chat history:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-export default { getMessages, getChatHistory };
+/**
+ * Send a new message (find or create conversation automatically)
+ * POST /messages/send
+ */
+const sendMessage = async (req, res) => {
+  const { senderId, receiverId, message } = req.body;
+
+  if (!senderId || !receiverId || !message) {
+    return res
+      .status(400)
+      .json({ error: "Missing sender, receiver, or message" });
+  }
+
+  try {
+    // 1️⃣ Find or create conversation
+    let conversation = await Conversation.findOne({
+      participants: { $all: [senderId, receiverId] },
+    });
+
+    if (!conversation) {
+      conversation = await Conversation.create({
+        participants: [senderId, receiverId],
+      });
+    }
+
+    // 2️⃣ Create message
+    const newMessage = await Message.create({
+      conversationId: conversation._id,
+      sender: senderId,
+      message,
+    });
+
+    // 3️⃣ Update conversation metadata
+    conversation.lastMessage = newMessage._id;
+    conversation.lastMessageAt = new Date();
+    await conversation.save();
+
+    // 4️⃣ Return the new message
+    const populated = await newMessage.populate("sender", "username _id");
+
+    res.status(201).json({
+      message: "Message sent successfully",
+      conversationId: conversation._id,
+      data: populated,
+    });
+  } catch (err) {
+    console.error("Error sending message:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * Delete a conversation (and its messages)
+ * DELETE /messages/conversation/:conversationId
+ */
+const deleteConversation = async (req, res) => {
+  const { conversationId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+    return res.status(400).json({ error: "Invalid conversation ID" });
+  }
+
+  try {
+    await Message.deleteMany({ conversationId });
+    await Conversation.findByIdAndDelete(conversationId);
+
+    res.json({ message: "Conversation deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting conversation:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export default {
+  getMessages,
+  getChatHistory,
+  sendMessage,
+  deleteConversation,
+};

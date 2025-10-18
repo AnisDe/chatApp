@@ -1,39 +1,44 @@
 import React from "react";
-import ChatMessages from "./ChatMessages";
+import ChatMessages from "./chatMessages";
 import ChatInput from "./ChatInput";
 import "./chatWindow.css";
 
 const ChatWindow = ({
   messages,
   currentUserId,
-  currentChatUser,
+  currentConversation,
   text,
   setText,
   onSend,
   typingUser,
   onTyping,
 }) => {
+  // 🧠 Identify the other participant
+  const otherUser = currentConversation?.participants?.find(
+    (p) => p._id !== currentUserId,
+  );
+
   return (
     <div className="chat-main">
-      {currentChatUser ? (
-        <>
-          <div className="messages-section">
-            <ChatMessages
-              messages={messages}
-              currentUserId={currentUserId}
-              currentChatUser={currentChatUser}
-              typingUser={typingUser}
-            />
-          </div>
-
-          <ChatInput
-            text={text}
-            setText={setText}
-            onSend={onSend}
-            onTyping={onTyping}
+      <>
+        {/* ✅ Messages section */}
+        <div className="messages-section">
+          <ChatMessages
+            messages={messages}
+            currentUserId={currentUserId}
+            currentConversation={currentConversation}
+            typingUser={typingUser}
           />
-        </>
-      ) : null}
+        </div>
+
+        {/* ✅ Input section */}
+        <ChatInput
+          text={text}
+          setText={setText}
+          onSend={onSend}
+          onTyping={onTyping}
+        />
+      </>
     </div>
   );
 };
