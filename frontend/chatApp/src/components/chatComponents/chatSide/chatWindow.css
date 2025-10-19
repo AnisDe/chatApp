@@ -220,3 +220,25 @@
     opacity: 1;
   }
 }
+
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #4f9cff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  position: relative;
+}
+
+.online-dot {
+  background-color: #4caf50;
+}
+
+.offline-dot {
+  background-color: #ccc;
+}

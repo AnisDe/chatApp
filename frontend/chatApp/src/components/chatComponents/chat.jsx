@@ -69,6 +69,7 @@ const Chat = ({ currentUserId }) => {
         onTyping={handleInputTyping}
         typingUser={typingUser}
         connectionStatus={isConnected ? "connected" : "disconnected"}
+        onlineUsers={onlineUsers}
       />
     </div>
   );

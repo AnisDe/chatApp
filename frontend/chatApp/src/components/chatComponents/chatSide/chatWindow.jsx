@@ -2,6 +2,7 @@ import React from "react";
 import ChatMessages from "./chatMessages";
 import ChatInput from "./ChatInput";
 import "./chatWindow.css";
+import { isUserOnline } from "../../../utils/isOnline"; // adjust the path
 
 const ChatWindow = ({
   messages,
@@ -11,12 +12,15 @@ const ChatWindow = ({
   setText,
   onSend,
   typingUser,
-  onTyping,
+  onTyping,  onlineUsers, // 👈 added prop
 }) => {
   // Identify the other participant
   const otherUser = currentConversation?.participants?.find(
     (p) => p._id !== currentUserId
   );
+
+  // Check if the other user is online
+  const isOnline = isUserOnline(otherUser?._id, onlineUsers);
 
   return (
     <div className="chat-main">
@@ -24,13 +28,25 @@ const ChatWindow = ({
       {otherUser && (
         <div className="chat-header">
           <div className="chat-header-info">
+            {/* Avatar */}
+            <div className="chat-avatar">
+              {otherUser.username?.[0]?.toUpperCase() || "?"}
+              <span
+                className={`status-dot ${
+                  isOnline ? "online-dot" : "offline-dot"
+                }`}
+              ></span>
+            </div>
 
-            {/* Username */}
-            <span className="chat-username">{otherUser.username}</span>
-
+            {/* Username + status */}
+            <div className="chat-header-text">
+              <span className="chat-username">{otherUser.username}</span>
+         
+            </div>
           </div>
         </div>
       )}
+
 
       {/* ✅ Messages section */}
       <div className="messages-section">
