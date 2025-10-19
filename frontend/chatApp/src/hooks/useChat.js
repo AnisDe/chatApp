@@ -1,154 +1,56 @@
 // hooks/useChat.js
-import { useCallback, useRef, useEffect } from "react";
-import { toast } from "react-toastify";
-import { useChatStore } from "../store/chatStore";
+import { useEffect } from "react";
 import { useSocket } from "./useSocket";
-import { useChatHistory } from "./useChatHistory";
 import { useUserSearch } from "./useUserSearch";
-import { useMessages } from "./useMessages";
-
-const TOAST_OPTIONS = {
-  position: "top-right",
-  autoClose: 5000,
-  closeOnClick: true,
-  pauseOnHover: true,
-};
+import { useConversationManager } from "./useConversationManager";
+import { useMessageSender } from "./useMessageSender";
+import { useSocketEvents } from "./useSocketEvents";
 
 export const useChat = (currentUserId) => {
-  const { currentConversation, setCurrentConversation } = useChatStore();
+  // State management
+  const conversationManager = useConversationManager(currentUserId);
+  const { currentConversation, chatHistory, addMessage, handleSelectConversation } = conversationManager;
+  
+  // User search
+  const userSearch = useUserSearch();
+  
+  // Socket connection
+  const socket = useSocket(currentUserId, { current: currentConversation });
+  const { 
+    socket: socketInstance, 
+    onlineUsers, 
+    typingUser, 
+    isConnected, 
+    on, 
+    off, 
+    emit, 
+    startTyping,  
+    stopTyping 
+  } = socket;
 
-  const currentConversationRef = useRef(currentConversation);
-  currentConversationRef.current = currentConversation;
-
-  // ✅ include setChatHistory from the hook
-  const { chatHistory, setChatHistory, handleReceivedMessage } =
-    useChatHistory(currentUserId);
-
-  const { users, searchTerm, setSearchTerm, loading } = useUserSearch();
-  const { messages, setMessages, addMessage } =
-    useMessages(currentConversation);
-  const {
-    socket,
-    onlineUsers,
-    typingUser,
-    isConnected,
-    on,
-    off,
+  // Message sending
+  const messageSender = useMessageSender(
+    currentUserId,
+    currentConversation,
     emit,
-    startTyping,
+    addMessage,
     stopTyping,
-  } = useSocket(currentUserId, currentConversationRef);
+    startTyping 
+  );
 
-
-
-  /**  select conversation (from sidebar or search) */
-const handleSelectConversation = useCallback(
-  async (conversationOrUser) => {
-    try {
-      // Case 1️⃣: Existing conversation clicked (already has participants)
-      if (conversationOrUser.participants) {
-        setCurrentConversation(conversationOrUser);
-        // Load previous messages
-        const res = await axiosInstance.get(
-          `/messages/${conversationOrUser._id}`
-        );
-        setMessages(res.data);
-        return;
-      }
-
-      // Case 2️⃣: User selected from search (not yet a conversation)
-      const existingConversation = chatHistory.find((conv) =>
-        conv.participants.some((p) => p._id === conversationOrUser._id)
-      );
-
-      if (existingConversation) {
-        // Reuse the existing conversation
-        setCurrentConversation(existingConversation);
-        const res = await axiosInstance.get(
-          `/messages/${existingConversation._id}`
-        );
-        setMessages(res.data);
-      } else {
-        // No conversation exists yet -> create a temporary one until the first message is sent
-        const newConv = await axiosInstance.post("/conversations", {
-          participants: [currentUserId, conversationOrUser._id],
-        });
-
-        setCurrentConversation(newConv.data);
-        setChatHistory((prev) => [newConv.data, ...prev]);
-        setMessages([]); // No messages yet
-      }
-    } catch (err) {
-      console.error("Failed to select conversation:", err);
-    }
-  },
-  [currentUserId, chatHistory, setCurrentConversation, setChatHistory, setMessages]
-);
-
-  /** 🔔 notifications */
-  const handleNotification = useCallback((notif) => {
-    const { from, fromUsername, messagePreview, conversationId } = notif;
-    const currentConv = currentConversationRef.current;
-    if (!currentConv || currentConv._id !== conversationId) {
-      toast.info(`New message from ${fromUsername}: ${messagePreview}`, {
-        ...TOAST_OPTIONS,
-        onClick: () =>
-          handleSelectConversation({
-            _id: conversationId,
-            participants: [{ _id: from, username: fromUsername }],
-          }),
-      });
-    }
-  }, []);
-
-  /** ⚡ socket listeners */
-  const setupSocketEvents = useCallback(() => {
-    if (!socket) return;
-
-    const handlePrivateMessage = (msg) => {
-      const currentConv = currentConversationRef.current;
-
-      // 🧠 If the message was sent by the current user
-      if (msg.sender?._id === currentUserId) {
-        //  Update sidebar only (don’t add duplicate in the chat window)
-        handleReceivedMessage(msg);
-        return;
-      }
-
-      // 🧠 If the message belongs to the current open conversation
-      if (currentConv && msg.conversationId === currentConv._id) {
-        addMessage(msg);
-      }
-
-      //  Always update sidebar (for both sender and receiver)
-      handleReceivedMessage(msg);
-    };
-
-    //  Register socket listeners
-    on("private_message", handlePrivateMessage);
-    on("notification", handleNotification);
-
-    //  Clean up when component unmounts or socket changes
-    return () => {
-      off("private_message", handlePrivateMessage);
-      off("notification", handleNotification);
-    };
-  }, [
-    socket,
+  // Socket events
+  useSocketEvents(
+    socketInstance,
+    currentUserId,
+    currentConversation,
     on,
     off,
     addMessage,
-    handleReceivedMessage,
-    handleNotification,
-    currentUserId, // 👈 added dependency
-  ]);
+    conversationManager.handleReceivedMessage || (() => {}),
+    handleSelectConversation
+  );
 
-  useEffect(() => {
-    const cleanup = setupSocketEvents();
-    return cleanup;
-  }, [setupSocketEvents]);
-
-  /** 🧹 stop typing when leaving chat */
+  // Cleanup effect
   useEffect(() => {
     return () => {
       if (currentConversation && currentUserId) {
@@ -157,65 +59,25 @@ const handleSelectConversation = useCallback(
     };
   }, [currentConversation, currentUserId, stopTyping]);
 
-  
-
-
-  /**  send message */
-  const handleSend = useCallback(
-    (text) => {
-      if (!text.trim() || !currentConversation) return;
-      const receiver = currentConversation.participants.find(
-        (p) => p._id !== currentUserId,
-      );
-      if (!receiver) return;
-
-      emit("private_message", {
-        to: receiver._id,
-        message: text,
-        conversationId: currentConversation._id,
-      });
-
-      const newMessage = {
-        sender: { _id: currentUserId },
-        receiver: receiver._id,
-        message: text,
-        conversationId: currentConversation._id,
-      };
-
-      addMessage(newMessage);
-      stopTyping({ to: receiver._id, from: currentUserId });
-    },
-    [currentConversation, currentUserId, emit, addMessage, stopTyping],
-  );
-
-  /** ✍️ typing indicator */
-  const handleTyping = useCallback(() => {
-    if (!currentConversation) return;
-    const receiver = currentConversation.participants.find(
-      (p) => p._id !== currentUserId,
-    );
-    if (receiver) startTyping({ to: receiver._id, from: currentUserId });
-  }, [currentConversation, currentUserId, startTyping]);
-
   return {
-    // state
-    currentConversation,
-    messages,
-    users,
-    searchTerm,
-    loading,
+    // State
+    currentConversation: conversationManager.currentConversation,
+    messages: conversationManager.messages,
+    users: userSearch.users,
+    searchTerm: userSearch.searchTerm,
+    loading: userSearch.loading,
     onlineUsers,
-    chatHistory,
+    chatHistory: conversationManager.chatHistory,
     typingUser,
     isConnected,
 
-    // ✅ add this to expose the setter
-    setChatHistory,
+    // Setters
+    setChatHistory: conversationManager.setChatHistory,
+    setSearchTerm: userSearch.setSearchTerm,
 
-    // actions
+    // Actions
     handleSelectConversation,
-    handleSend,
-    handleTyping,
-    setSearchTerm,
+    handleSend: messageSender.handleSend,
+    handleTyping: messageSender.handleTyping,
   };
 };
