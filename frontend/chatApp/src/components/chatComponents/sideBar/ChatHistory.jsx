@@ -1,6 +1,7 @@
 import React from "react";
 import "./Sidebar.css";
 import axiosInstance from "../../../lib/axios";
+import { isUserOnline } from "../../../utils/isOnline"; // adjust the path
 
 const ChatHistory = ({
   chatHistory,
@@ -11,7 +12,7 @@ const ChatHistory = ({
   setChatHistory,
 }) => {
   const handleDeleteConversation = async (conversationId, e) => {
-    e.stopPropagation(); // Prevent opening the chat when clicking delete
+    e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this conversation?"))
       return;
 
@@ -32,7 +33,7 @@ const ChatHistory = ({
         const otherUser = conv.participants.find(
           (p) => p._id !== currentUserId
         );
-        const isOnline = onlineUsers?.includes(otherUser?._id);
+        const isOnline = isUserOnline(otherUser?._id, onlineUsers);
         const lastMsg = conv.lastMessage?.message || "No messages yet";
         const lastTime = conv.lastMessageAt
           ? new Date(conv.lastMessageAt).toLocaleTimeString([], {
@@ -67,7 +68,6 @@ const ChatHistory = ({
 
             {lastTime && <span className="timestamp">{lastTime}</span>}
 
-            {/* 🗑 Always mounted; visibility handled by CSS */}
             <button
               className="delete-btn"
               onClick={(e) => handleDeleteConversation(conv._id, e)}
