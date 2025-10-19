@@ -39,6 +39,52 @@ export const useChat = (currentUserId) => {
     stopTyping,
   } = useSocket(currentUserId, currentConversationRef);
 
+
+
+  /**  select conversation (from sidebar or search) */
+const handleSelectConversation = useCallback(
+  async (conversationOrUser) => {
+    try {
+      // Case 1️⃣: Existing conversation clicked (already has participants)
+      if (conversationOrUser.participants) {
+        setCurrentConversation(conversationOrUser);
+        // Load previous messages
+        const res = await axiosInstance.get(
+          `/messages/${conversationOrUser._id}`
+        );
+        setMessages(res.data);
+        return;
+      }
+
+      // Case 2️⃣: User selected from search (not yet a conversation)
+      const existingConversation = chatHistory.find((conv) =>
+        conv.participants.some((p) => p._id === conversationOrUser._id)
+      );
+
+      if (existingConversation) {
+        // Reuse the existing conversation
+        setCurrentConversation(existingConversation);
+        const res = await axiosInstance.get(
+          `/messages/${existingConversation._id}`
+        );
+        setMessages(res.data);
+      } else {
+        // No conversation exists yet -> create a temporary one until the first message is sent
+        const newConv = await axiosInstance.post("/conversations", {
+          participants: [currentUserId, conversationOrUser._id],
+        });
+
+        setCurrentConversation(newConv.data);
+        setChatHistory((prev) => [newConv.data, ...prev]);
+        setMessages([]); // No messages yet
+      }
+    } catch (err) {
+      console.error("Failed to select conversation:", err);
+    }
+  },
+  [currentUserId, chatHistory, setCurrentConversation, setChatHistory, setMessages]
+);
+
   /** 🔔 notifications */
   const handleNotification = useCallback((notif) => {
     const { from, fromUsername, messagePreview, conversationId } = notif;
@@ -111,27 +157,8 @@ export const useChat = (currentUserId) => {
     };
   }, [currentConversation, currentUserId, stopTyping]);
 
-  /**  select conversation (from sidebar or search) */
-  const handleSelectConversation = useCallback(
-    (conversationOrUser) => {
-      if (conversationOrUser.participants) {
-        setCurrentConversation(conversationOrUser);
-      } else {
-        setCurrentConversation({
-          _id: null,
-          participants: [
-            { _id: currentUserId },
-            {
-              _id: conversationOrUser._id,
-              username: conversationOrUser.username,
-            },
-          ],
-        });
-      }
-      setMessages([]);
-    },
-    [setCurrentConversation, setMessages, currentUserId],
-  );
+  
+
 
   /**  send message */
   const handleSend = useCallback(
