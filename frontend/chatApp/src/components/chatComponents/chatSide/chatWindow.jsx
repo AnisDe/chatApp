@@ -13,32 +13,42 @@ const ChatWindow = ({
   typingUser,
   onTyping,
 }) => {
-  // 🧠 Identify the other participant
+  // Identify the other participant
   const otherUser = currentConversation?.participants?.find(
-    (p) => p._id !== currentUserId,
+    (p) => p._id !== currentUserId
   );
 
   return (
     <div className="chat-main">
-      <>
-        {/* ✅ Messages section */}
-        <div className="messages-section">
-          <ChatMessages
-            messages={messages}
-            currentUserId={currentUserId}
-            currentConversation={currentConversation}
-            typingUser={typingUser}
-          />
-        </div>
+      {/* ✅ Chat header */}
+      {otherUser && (
+        <div className="chat-header">
+          <div className="chat-header-info">
 
-        {/* ✅ Input section */}
-        <ChatInput
-          text={text}
-          setText={setText}
-          onSend={onSend}
-          onTyping={onTyping}
+            {/* Username */}
+            <span className="chat-username">{otherUser.username}</span>
+
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Messages section */}
+      <div className="messages-section">
+        <ChatMessages
+          messages={messages}
+          currentUserId={currentUserId}
+          currentConversation={currentConversation}
+          typingUser={typingUser}
         />
-      </>
+      </div>
+
+      {/* ✅ Input section */}
+      <ChatInput
+        text={text}
+        setText={setText}
+        onSend={onSend}
+        onTyping={onTyping}
+      />
     </div>
   );
 };
