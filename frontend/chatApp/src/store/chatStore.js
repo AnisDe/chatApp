@@ -16,6 +16,6 @@ export const useChatStore = create(
       partialize: (state) => ({
         currentConversation: state.currentConversation,
       }),
-    },
-  ),
+    }
+  )
 );
