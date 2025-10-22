@@ -11,6 +11,8 @@ const initSocket = (io, getUserFromSession) => {
   const onlineUsers = new Map();
 
   io.on("connection", async (socket) => {
+    console.log("🟢 New client connected:", socket.id);
+
     try {
       const username = getUserFromSession(socket.request);
       if (!username) return socket.disconnect();
@@ -19,13 +21,15 @@ const initSocket = (io, getUserFromSession) => {
       if (!user) return socket.disconnect();
 
       const userId = user._id.toString();
-      socket.join(userId);
 
-      // ✅ Track online users
-      onlineUsers.set(userId, socket.id);
+      // ✅ Always join the room by user ID
+      socket.join(userId);
+      onlineUsers.set(userId, true); // just mark as online (no socket.id)
+      console.log(`${userId} joined its personal room`);
+
       io.emit("online_users", Array.from(onlineUsers.keys()));
 
-      // ✅ Handle private messaging
+      // ✅ Handle private messages
       socket.on("private_message", async (payload) => {
         try {
           await handlePrivateMessage(io, socket, payload, user);
@@ -35,32 +39,21 @@ const initSocket = (io, getUserFromSession) => {
         }
       });
 
-      // ✅ Handle disconnect
-      socket.on("disconnect", () => {
-       
-
-        for (let [id, sId] of onlineUsers.entries()) {
-          if (sId === socket.id) {
-            onlineUsers.delete(id);
-            break;
-          }
-        }
-
-        io.emit("online_users", Array.from(onlineUsers.keys()));
-    
+      // ✅ Typing events
+      socket.on("typing", ({ to, from }) => {
+        if (to) io.to(to).emit("user_typing", { from });
       });
 
-       socket.on("typing", ({ to, from }) => {
-    if (to) {
-      io.to(to).emit("user_typing", { from });
-    }
-  });
+      socket.on("stop_typing", ({ to, from }) => {
+        if (to) io.to(to).emit("user_stop_typing", { from });
+      });
 
-  socket.on("stop_typing", ({ to, from }) => {
-    if (to) {
-      io.to(to).emit("user_stop_typing", { from });
-    }
-  });
+      // ✅ Disconnect cleanup
+      socket.on("disconnect", () => {
+        onlineUsers.delete(userId);
+        io.emit("online_users", Array.from(onlineUsers.keys()));
+        console.log(`🔴 ${userId} disconnected`);
+      });
     } catch (err) {
       console.error("Socket connection error:", err);
       socket.disconnect();
