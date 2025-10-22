@@ -1,7 +1,8 @@
 import React from "react";
 import "./Sidebar.css";
 import axiosInstance from "../../../lib/axios";
-import { isUserOnline } from "../../../utils/isOnline"; // adjust the path
+import { isUserOnline } from "../../../utils/isOnline";
+import { useConversationManager } from "../../../hooks/useConversationManager"; // ✅ import your hook
 
 const ChatHistory = ({
   chatHistory,
@@ -11,8 +12,11 @@ const ChatHistory = ({
   onlineUsers,
   setChatHistory,
 }) => {
+  const { clearCurrentConversation } = useConversationManager(currentUserId); // ✅ grab the clear function
+
   const handleDeleteConversation = async (conversationId, e) => {
     e.stopPropagation();
+
     if (!window.confirm("Are you sure you want to delete this conversation?"))
       return;
 
@@ -21,6 +25,11 @@ const ChatHistory = ({
       setChatHistory((prev) =>
         prev.filter((conv) => conv._id !== conversationId)
       );
+
+      // 🧠 Close the conversation if it's currently open
+      if (currentConversation?._id === conversationId) {
+        clearCurrentConversation();
+      }
     } catch (err) {
       console.error("Failed to delete conversation:", err);
       alert("Failed to delete conversation");
@@ -30,7 +39,7 @@ const ChatHistory = ({
   return (
     <ul className="chat-history-list">
       {chatHistory.map((conv) => {
-        const otherUser = conv.participants.find(
+        const otherUser = conv.participants?.find(
           (p) => p._id !== currentUserId
         );
         const isOnline = isUserOnline(otherUser?._id, onlineUsers);
