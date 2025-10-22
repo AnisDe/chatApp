@@ -1,5 +1,0 @@
-{
-    "[dockercompose]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
-    }
-}
