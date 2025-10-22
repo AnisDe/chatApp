@@ -4,67 +4,90 @@ import axiosInstance from "../lib/axios";
 
 export const useChatHistory = (currentUserId) => {
   const [chatHistory, setChatHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Normalize participant data
+  const normalizeParticipant = useCallback((participant) => {
+    if (!participant) return null;
+    return {
+      _id: participant._id || participant,
+      username: participant.username || "Unknown User"
+    };
+  }, []);
 
   // Update sidebar when a new message arrives
- //  Update sidebar when a new message arrives (for both sender & receiver)
-const handleReceivedMessage = useCallback(
-  (msg) => {
-    setChatHistory((prev) => {
-      const updated = [...prev];
-      const idx = updated.findIndex((c) => c._id === msg.conversationId);
+  const handleReceivedMessage = useCallback((msg) => {
+    setChatHistory(prev => {
       const now = new Date().toISOString();
-
-      // 🧠 Identify participants properly
-      const sender = {
-        _id: msg.sender?._id || msg.sender,
-        username: msg.sender?.username || msg.fromUsername || "Unknown",
-      };
-      const receiver = {
-        _id: msg.receiver?._id || msg.receiver,
-        username: msg.receiver?.username || msg.toUsername || "Unknown",
-      };
-
-      if (idx !== -1) {
-        // 🧩 Update existing conversation
-        const [conv] = updated.splice(idx, 1);
-        conv.lastMessage = { message: msg.message, sender };
-        conv.lastMessageAt = now;
-        updated.unshift(conv);
+      const existingConvIndex = prev.findIndex(conv => conv._id === msg.conversationId);
+      
+      if (existingConvIndex > -1) {
+        // Update existing conversation
+        const updated = [...prev];
+        const [existingConv] = updated.splice(existingConvIndex, 1);
+        
+        return [{
+          ...existingConv,
+          lastMessage: { 
+            message: msg.message, 
+            sender: normalizeParticipant(msg.sender) 
+          },
+          lastMessageAt: now
+        }, ...updated];
       } else {
-        // 🆕 Create a new conversation entry
-        updated.unshift({
+        // Create new conversation entry
+        const sender = normalizeParticipant(msg.sender);
+        const receiver = normalizeParticipant(msg.receiver);
+        
+        const newConversation = {
           _id: msg.conversationId,
-          participants: [sender, receiver],
-          lastMessage: { message: msg.message, sender },
-          lastMessageAt: now,
-        });
+          participants: [sender, receiver].filter(Boolean),
+          lastMessage: { 
+            message: msg.message, 
+            sender 
+          },
+          lastMessageAt: now
+        };
+        
+        return [newConversation, ...prev];
       }
-
-      return updated;
     });
-  },
-  [setChatHistory]
-);
+  }, [normalizeParticipant]);
 
-
-  // Fetch chat list (conversations)
-  useEffect(() => {
+  // Fetch chat history
+  const fetchChatHistory = useCallback(async () => {
     if (!currentUserId) return;
-
-    axiosInstance
-      .get(`/messages/history/${currentUserId}`)
-      .then((res) => {
-        const sorted = res.data.sort(
-          (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt),
-        );
-        setChatHistory(sorted);
-      })
-      .catch((err) => console.error("Failed to fetch conversations:", err));
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axiosInstance.get(`/messages/history/${currentUserId}`);
+      const sortedHistory = response.data.sort(
+        (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
+      );
+      setChatHistory(sortedHistory);
+    } catch (err) {
+      console.error("Failed to fetch chat history:", err);
+      setError("Failed to load conversations");
+      setChatHistory([]);
+    } finally {
+      setLoading(false);
+    }
   }, [currentUserId]);
+
+  // Initial load
+  useEffect(() => {
+    fetchChatHistory();
+  }, [fetchChatHistory]);
 
   return {
     chatHistory,
+    loading,
+    error,
     handleReceivedMessage,
     setChatHistory,
+    refetch: fetchChatHistory
   };
 };

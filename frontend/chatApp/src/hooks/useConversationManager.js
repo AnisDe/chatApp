@@ -3,47 +3,85 @@ import { useCallback } from "react";
 import { useChatStore } from "../store/chatStore";
 import { useChatHistory } from "./useChatHistory";
 import { useMessages } from "./useMessages";
+import axiosInstance from "../lib/axios";
 
 export const useConversationManager = (currentUserId) => {
   const { currentConversation, setCurrentConversation } = useChatStore();
-  const { chatHistory, setChatHistory } = useChatHistory(currentUserId);
-  const { messages, setMessages, addMessage } = useMessages(currentConversation);
+  const {
+    chatHistory,
+    setChatHistory,
+    handleReceivedMessage,
+    refetch: refetchChatHistory,
+  } = useChatHistory(currentUserId);
+
+  const { messages, setMessages, addMessage, clearMessages } =
+    useMessages(currentConversation);
 
   const handleSelectConversation = useCallback(
     async (conversationOrUser) => {
+      if (!currentUserId) {
+        throw new Error("User must be logged in to select conversation");
+      }
+
       try {
-        // Case 1️⃣: Existing conversation clicked
-        if (conversationOrUser.participants) {
+        // 🟩 Case 1: Existing conversation (from chat history)
+        if (Array.isArray(conversationOrUser.participants)) {
           setCurrentConversation(conversationOrUser);
-          const res = await axiosInstance.get(`/messages/${conversationOrUser._id}`);
-          setMessages(res.data);
           return;
         }
 
-        // Case 2️⃣: User selected from search
+        // 🟩 Case 2: New user from search - find or create conversation
+        const targetUserId = conversationOrUser._id;
+        if (!targetUserId) {
+          throw new Error("Invalid user selected (missing _id)");
+        }
+
+        // Safely check if a conversation already exists
         const existingConversation = chatHistory.find((conv) =>
-          conv.participants.some((p) => p._id === conversationOrUser._id)
+          conv.participants?.some((p) => p._id === targetUserId)
         );
 
         if (existingConversation) {
           setCurrentConversation(existingConversation);
-          const res = await axiosInstance.get(`/messages/${existingConversation._id}`);
-          setMessages(res.data);
         } else {
-          const newConv = await axiosInstance.post("/conversations", {
-            participants: [currentUserId, conversationOrUser._id],
+          // Create new conversation on the server
+          const response = await axiosInstance.post("/messages/conversation", {
+            participants: [currentUserId, targetUserId],
           });
-          setCurrentConversation(newConv.data);
-          setChatHistory((prev) => [newConv.data, ...prev]);
-          setMessages([]);
+
+          // Axios responses typically look like { data: {...}, status, headers, ... }
+          const newConversation = response.data.conversation;
+
+          if (
+            !newConversation ||
+            !Array.isArray(newConversation.participants)
+          ) {
+            throw new Error(
+              "Invalid response format when creating conversation"
+            );
+          }
+
+          // Update UI state
+          setCurrentConversation(newConversation);
+          setChatHistory((prev) => [newConversation, ...prev]);
         }
-      } catch (err) {
-        console.error("Failed to select conversation:", err);
-        throw err; // Let the caller handle the error
+      } catch (error) {
+        console.error("Failed to select conversation:", error);
+        throw new Error(
+          `Could not start conversation: ${
+            error.response?.data?.message || error.message
+          }`
+        );
       }
     },
-    [currentUserId, chatHistory, setCurrentConversation, setChatHistory, setMessages]
+    [currentUserId, chatHistory, setCurrentConversation, setChatHistory]
   );
+
+  // Clear current conversation
+  const clearCurrentConversation = useCallback(() => {
+    setCurrentConversation(null);
+    clearMessages();
+  }, [setCurrentConversation, clearMessages]);
 
   return {
     currentConversation,
@@ -52,5 +90,8 @@ export const useConversationManager = (currentUserId) => {
     setChatHistory,
     addMessage,
     handleSelectConversation,
+    handleReceivedMessage,
+    clearCurrentConversation,
+    refetchChatHistory,
   };
 };

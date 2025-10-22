@@ -52,12 +52,13 @@ app.use(session(sessionConfig));
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use(new local_auth(User.authenticate()));
-app.use(express.json());
+app.use(express.json({ limit: "10mb" })); // for JSON payloads
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(
   cors({
     origin: ["http://localhost:5173", process.env.LOCAL_FRONTEND_URL],
     credentials: true, // Allow cookies / sessions
-  }),
+  })
 );
 
 passport.serializeUser(User.serializeUser());
@@ -70,7 +71,7 @@ const io = new Server(server, {
     credentials: true,
   },
 });
-
+app.set("io", io);
 // Share session with Socket.IO
 const sessionMiddleware = session(sessionConfig);
 io.use((socket, next) => {

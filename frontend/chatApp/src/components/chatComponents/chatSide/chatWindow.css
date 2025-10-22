@@ -242,3 +242,313 @@
 .offline-dot {
   background-color: #ccc;
 }
+
+/* === Extended Input Section for Upload Icon === */
+
+/* Container for text input + icon */
+.input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+/* Adjusted text input to make space for the icon inside */
+.input-container input {
+  width: 100%;
+  padding: 12px 45px 12px 14px; /* extra space for icon on right */
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 15px;
+  height: 48px;
+  box-sizing: border-box;
+}
+
+.input-container input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 5px var(--primary-color);
+}
+
+/* Upload icon (📎) inside input */
+.icon-button {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--primary-color);
+  transition: color 0.3s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.icon-button:hover {
+  color: var(--primary-hover);
+  transform: scale(1.1);
+}
+
+/* Hidden file input */
+.file-input-hidden {
+  display: none;
+}
+
+/* Optional image preview thumbnails (before sending) */
+.image-preview {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.image-preview img {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+
+/* === Chat Input Container (wrapping preview) === */
+.chat-input-wrapper-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+/* Reuse your existing .chat-input-wrapper */
+.chat-input-wrapper {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+/* Input + icon container */
+.input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.input-container input {
+  width: 100%;
+  padding: 12px 45px 12px 14px; /* make room for icon */
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 15px;
+  height: 48px;
+  box-sizing: border-box;
+}
+
+.input-container input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 5px var(--primary-color);
+}
+
+/* Upload icon inside input */
+.icon-button {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--primary-color);
+  transition: color 0.3s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.icon-button:hover {
+  color: var(--primary-hover);
+  transform: scale(1.1);
+}
+
+/* Hidden input */
+.file-input-hidden {
+  display: none;
+}
+
+/* === Image Preview Section === */
+.image-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: 2px;
+}
+
+.preview-item {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-image {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  background: rgba(255, 85, 85, 0.85);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.remove-image:hover {
+  background: rgba(255, 50, 50, 1);
+}
+/* === Chat Input Container (wrapping preview) === */
+.chat-input-wrapper-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+/* Reuse your existing .chat-input-wrapper */
+.chat-input-wrapper {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+/* === Input + Upload Icon (Perfect Alignment) === */
+.input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+/* Adjusted text input to align perfectly with icon */
+.input-container input {
+  width: 100%;
+  padding: 12px 48px 12px 14px; /* space for icon */
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 15px;
+  height: 48px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-container input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 4px var(--primary-color);
+}
+
+.icon-button {
+  position: absolute;
+  top: 40%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  height: 40px; 
+  width: 40px;
+  transition: color 0.2s ease, transform 0.15s ease;
+}
+
+.icon-button:hover {
+  color: var(--primary-hover);
+  transform: translateY(-50%) scale(1.1);
+}
+
+/* Ensure the clickable area is centered visually */
+.icon-button:focus {
+  outline: none;
+  color: var(--primary-hover);
+}
+
+/* Hidden file input */
+.file-input-hidden {
+  display: none;
+}
+
+
+/* Hidden input */
+.file-input-hidden {
+  display: none;
+}
+
+/* === Image Preview Section === */
+.image-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: 2px;
+}
+
+.preview-item {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-image {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  background: rgba(255, 85, 85, 0.85);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.remove-image:hover {
+  background: rgba(255, 50, 50, 1);
+}

@@ -6,6 +6,8 @@ const router = express.Router();
 // Chat history (list of conversations)
 router.get("/history/:userId", messages.getChatHistory);
 
+router.post("/conversation", messages.createConversation);
+
 // Messages inside a conversation
 router.get("/:conversationId", messages.getMessages);
 

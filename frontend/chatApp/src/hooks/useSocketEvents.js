@@ -1,15 +1,18 @@
 // hooks/useSocketEvents.js
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 
 const TOAST_OPTIONS = {
   position: "top-right",
-  autoClose: 5000,
-  closeOnClick: true,
+  autoClose: 4000,
   pauseOnHover: true,
 };
 
-export const useSocketEvents = (
+/**
+ * Keeps socket event listeners stable across re-renders.
+ * Works even when currentConversation or addMessage changes dynamically.
+ */
+export const useSocketEvents = ({
   socket,
   currentUserId,
   currentConversation,
@@ -17,68 +20,66 @@ export const useSocketEvents = (
   off,
   addMessage,
   handleReceivedMessage,
-  handleSelectConversation
-) => {
-  const currentConversationRef = useRef(currentConversation);
-  currentConversationRef.current = currentConversation;
+  handleSelectConversation,
+}) => {
+  const currentConvRef = useRef(currentConversation);
+  const currentUserRef = useRef(currentUserId);
+  const addMessageRef = useRef(addMessage);
+  const handleReceivedMessageRef = useRef(handleReceivedMessage);
 
-  const handleNotification = useCallback((notif) => {
-    const { from, fromUsername, messagePreview, conversationId } = notif;
-    const currentConv = currentConversationRef.current;
-    
-    if (!currentConv || currentConv._id !== conversationId) {
-      toast.info(`New message from ${fromUsername}: ${messagePreview}`, {
-        ...TOAST_OPTIONS,
-        onClick: () =>
-          handleSelectConversation({
-            _id: conversationId,
-            participants: [{ _id: from, username: fromUsername }],
-          }),
-      });
-    }
-  }, [handleSelectConversation]);
+  // Keep refs current value of the dependencies
+  useEffect(() => {
+    currentConvRef.current = currentConversation;
+    currentUserRef.current = currentUserId;
+    addMessageRef.current = addMessage;
+    handleReceivedMessageRef.current = handleReceivedMessage;
+  }, [currentConversation, currentUserId, addMessage, handleReceivedMessage]);
 
-  const setupSocketEvents = useCallback(() => {
+  // Setup only once on mount
+  useEffect(() => {
     if (!socket) return;
 
-    const handlePrivateMessage = (msg) => {
-      const currentConv = currentConversationRef.current;
+    const handlePrivateMessage = (message) => {
+      const activeConv = currentConvRef.current;
+      const userId = currentUserRef.current;
+      const addMsg = addMessageRef.current;
+      const handleMsg = handleReceivedMessageRef.current;
+      if (!message) return;
 
-      if (msg.sender?._id === currentUserId) {
-        handleReceivedMessage(msg);
-        return;
+      // Always update sidebar
+      if (handleMsg) handleMsg(message);
+
+      // Add to chat window only if this is the active conversation
+      if (activeConv && message.conversationId === activeConv._id) {
+        addMsg(message);
       }
-
-      if (currentConv && msg.conversationId === currentConv._id) {
-        addMessage(msg);
-      }
-
-      handleReceivedMessage(msg);
     };
 
-    on("private_message", handlePrivateMessage);
-    on("notification", handleNotification);
+    const handleNotification = (notification) => {
+      const { from, fromUsername, messagePreview, conversationId } = notification;
+      const activeConv = currentConvRef.current;
+      if (!activeConv || activeConv._id !== conversationId) {
+        toast.info(`New message from ${fromUsername}: ${messagePreview}`, {
+          ...TOAST_OPTIONS,
+          onClick: () =>
+            handleSelectConversation({
+              _id: conversationId,
+              participants: [{ _id: from, username: fromUsername }],
+            }),
+        });
+      }
+    };
 
+    // Register listeners once
+    socket.on("private_message", handlePrivateMessage);
+    socket.on("notification", handleNotification);
+
+    console.log("✅ Socket listeners initialized (persistent)");
+
+    // Cleanup on unmount
     return () => {
-      off("private_message", handlePrivateMessage);
-      off("notification", handleNotification);
+      socket.off("private_message", handlePrivateMessage);
+      socket.off("notification", handleNotification);
     };
-  }, [
-    socket,
-    on,
-    off,
-    addMessage,
-    handleReceivedMessage,
-    handleNotification,
-    currentUserId,
-  ]);
-
-  useEffect(() => {
-    const cleanup = setupSocketEvents();
-    return cleanup;
-  }, [setupSocketEvents]);
-
-  return {
-    handleNotification,
-  };
+  }, [socket, handleSelectConversation]);
 };

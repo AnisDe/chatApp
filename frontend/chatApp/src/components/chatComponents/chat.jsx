@@ -21,8 +21,7 @@ const Chat = ({ currentUserId }) => {
     chatHistory,
     typingUser,
     isConnected,
-    setChatHistory, // ✅ make sure this is here
-
+    setChatHistory,
     // ✅ Actions
     handleSelectConversation,
     handleSend: sendMessage,
@@ -30,11 +29,9 @@ const Chat = ({ currentUserId }) => {
     setSearchTerm,
   } = useChat(currentUserId);
 
-  const handleSend = () => {
-    if (text.trim()) {
-      sendMessage(text);
-      setText("");
-    }
+  const handleSend = (text, images = []) => {
+    sendMessage(text, images);
+    setText("");
   };
 
   const handleInputTyping = () => {

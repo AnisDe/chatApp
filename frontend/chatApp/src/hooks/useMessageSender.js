@@ -1,52 +1,79 @@
 // hooks/useMessageSender.js
-import { useCallback } from "react";
+import { useState, useCallback } from "react";
+import axiosInstance from "../lib/axios";
 
-export const useMessageSender = (
-  currentUserId, 
-  currentConversation, 
-  emit, 
-  addMessage, 
+export const useMessageSender = ({
+  currentUserId,
+  currentConversation,
+  emit,
+  addMessage,
   stopTyping,
-  startTyping  
-) => {
+}) => {
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState(null);
+
   const handleSend = useCallback(
-    (text) => {
-      if (!text.trim() || !currentConversation) return;
-      
+    async (text, images = []) => {
+      if ((!text?.trim() && images.length === 0) || !currentConversation) return;
+      if (!currentUserId) return;
+
       const receiver = currentConversation.participants.find(
-        (p) => p._id !== currentUserId,
+        (p) => p._id !== currentUserId
       );
       if (!receiver) return;
 
-      emit("private_message", {
-        to: receiver._id,
-        message: text,
-        conversationId: currentConversation._id,
-      });
+      setSending(true);
+      setError(null);
 
-      const newMessage = {
+      const optimisticMessage = {
+        _id: `temp-${Date.now()}`,
+        conversationId: currentConversation._id,
         sender: { _id: currentUserId },
-        receiver: receiver._id,
-        message: text,
-        conversationId: currentConversation._id,
+        receiver: { _id: receiver._id },
+        message: text.trim(),
+        images,
+        createdAt: new Date().toISOString(),
+        status: "sending",
       };
+      addMessage(optimisticMessage);
 
-      addMessage(newMessage);
-      stopTyping({ to: receiver._id, from: currentUserId });
+      try {
+        const response = await axiosInstance.post("/messages/send", {
+          senderId: currentUserId,
+          receiverId: receiver._id,
+          message: text.trim(),
+          images,
+          conversationId: currentConversation._id,
+        });
+
+        const sentMessage = {
+          ...response.data.data,
+          conversationId: currentConversation._id,
+        };
+
+        // Emit socket only (avoid duplicate optimistic insert)
+      
+
+        stopTyping({ to: receiver._id, from: currentUserId });
+        return sentMessage;
+      } catch (err) {
+        console.error("Error sending message:", err);
+        setError(err.response?.data?.message || "Failed to send message");
+        addMessage({ ...optimisticMessage, status: "failed" });
+      } finally {
+        setSending(false);
+      }
     },
-    [currentConversation, currentUserId, emit, addMessage, stopTyping],
+    [currentUserId, currentConversation, emit, addMessage, stopTyping]
   );
 
   const handleTyping = useCallback(() => {
-    if (!currentConversation) return;
+    if (!currentConversation || !currentUserId) return;
     const receiver = currentConversation.participants.find(
-      (p) => p._id !== currentUserId,
+      (p) => p._id !== currentUserId
     );
-    if (receiver) startTyping({ to: receiver._id, from: currentUserId });
-  }, [currentConversation, currentUserId, startTyping]);
+    if (receiver) emit("typing", { to: receiver._id, from: currentUserId });
+  }, [currentConversation, currentUserId, emit]);
 
-  return {
-    handleSend,
-    handleTyping,
-  };
+  return { handleSend, handleTyping, sending, error, clearError: () => setError(null) };
 };

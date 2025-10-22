@@ -1,29 +1,105 @@
-import React from "react";
+// components/chatSide/ChatInput.jsx
+import React, { useState, useRef } from "react";
 
 const ChatInput = ({ text, setText, onSend, onTyping }) => {
+  const [images, setImages] = useState([]);
+  const fileInputRef = useRef(null);
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      onSend();
+      handleSendClick();
     }
   };
 
-  return (
-    <div className="chat-input-wrapper">
-      <input
-        id="chat-input"
-        type="text"
-        placeholder="Type a message..."
-        value={text}
-        onChange={(e) => {
-          setText(e.target.value);
-          onTyping(); 
-        }}
-         onKeyDown={handleKeyDown}
-      />
+  const handleFileChange = async (e) => {
+    const files = Array.from(e.target.files);
+    const base64Images = await Promise.all(files.map((file) => toBase64(file)));
+    setImages((prev) => [...prev, ...base64Images]);
+  };
 
-      <button onClick={onSend} className="send-button">
-        Send
-      </button>
+  const toBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+    });
+
+  const handleSendClick = () => {
+    if (text.trim() || images.length > 0) {
+      onSend(text, images);
+      setText("");
+      setImages([]);
+    }
+  };
+
+  const handleImageIconClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleRemoveImage = (index) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div className="chat-input-wrapper-container">
+      <div className="chat-input-wrapper">
+        <div className="input-container">
+          <input
+            id="chat-input"
+            type="text"
+            placeholder="Type a message..."
+            value={text}
+            onChange={(e) => {
+              setText(e.target.value);
+              onTyping();
+            }}
+            onKeyDown={handleKeyDown}
+          />
+
+          {/* Hidden file input */}
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="file-input-hidden"
+          />
+
+          {/* Upload icon */}
+          <button
+            type="button"
+            onClick={handleImageIconClick}
+            className="icon-button"
+            title="Attach image"
+          >
+            📎
+          </button>
+        </div>
+
+        <button onClick={handleSendClick} className="send-button">
+          Send
+        </button>
+      </div>
+
+      {/* Image preview section */}
+      {images.length > 0 && (
+        <div className="image-preview">
+          {images.map((img, index) => (
+            <div key={index} className="preview-item">
+              <img src={img} alt={`upload-${index}`} />
+              <button
+                className="remove-image"
+                onClick={() => handleRemoveImage(index)}
+                title="Remove"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

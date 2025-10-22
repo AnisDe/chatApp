@@ -1,6 +1,6 @@
 import React from "react";
 import ChatMessages from "./chatMessages";
-import ChatInput from "./ChatInput";
+import ChatInput from "./chatInput";
 import "./chatWindow.css";
 import { isUserOnline } from "../../../utils/isOnline"; // adjust the path
 
