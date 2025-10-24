@@ -56,11 +56,15 @@ export const useSocketEvents = ({
     };
 
     const handleNotification = (notification) => {
-      const { from, fromUsername, messagePreview, conversationId } = notification;
+      const { from, fromUsername, messagePreview, conversationId } =
+        notification;
       const activeConv = currentConvRef.current;
+
       if (!activeConv || activeConv._id !== conversationId) {
         toast.info(`New message from ${fromUsername}: ${messagePreview}`, {
-          ...TOAST_OPTIONS,
+          position: "top-right",
+          autoClose: 4000,
+          pauseOnHover: true,
           onClick: () =>
             handleSelectConversation({
               _id: conversationId,
@@ -73,8 +77,6 @@ export const useSocketEvents = ({
     // Register listeners once
     socket.on("private_message", handlePrivateMessage);
     socket.on("notification", handleNotification);
-
-    console.log("✅ Socket listeners initialized (persistent)");
 
     // Cleanup on unmount
     return () => {

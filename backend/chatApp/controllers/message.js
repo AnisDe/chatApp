@@ -86,15 +86,9 @@ const createConversation = async (req, res) => {
  * POST /messages/send
  * Send a message (creates conversation automatically if missing).
  */
+// In your sendMessage controller
 const sendMessage = async (req, res) => {
   const { senderId, receiverId, message = "", images = [] } = req.body;
-
-  if (!senderId || !receiverId || (!message && images.length === 0)) {
-    return res.status(400).json({
-      error:
-        "Missing required fields: senderId, receiverId, message, or images",
-    });
-  }
 
   try {
     // 1️⃣ Ensure conversation exists
@@ -134,7 +128,7 @@ const sendMessage = async (req, res) => {
       "username _id"
     );
 
-    // 6️⃣ Emit socket event (real-time update)
+    // 6️⃣ Emit socket event with ACTUAL message ID
     const io = req.app.get("io");
     if (io) {
       const senderUser = await User.findById(senderId).select("username");
@@ -147,11 +141,21 @@ const sendMessage = async (req, res) => {
           images: uploadedImages,
           conversationId: conversation._id,
         },
-        senderUser
+        senderUser,
+        populatedMessage._id // ✅ Pass the actual message ID
       );
+
+      io.to(receiverId).emit("notification", {
+        from: senderId,
+        fromUsername: senderUser.username,
+        messagePreview:
+          populatedMessage.message?.slice(0, 50) ||
+          (uploadedImages.length > 0 ? "[Image]" : "[New message]"),
+        conversationId: conversation._id,
+      });
     }
 
-    // 7️⃣ Respond to client
+    // 7️⃣ Respond to client with actual message data
     return res.status(201).json({
       success: true,
       message: "Message sent successfully",
@@ -165,7 +169,6 @@ const sendMessage = async (req, res) => {
       .json({ error: "Failed to send message", details: err.message });
   }
 };
-
 /**
  * DELETE /messages/conversation/:conversationId
  * Delete a conversation and all its messages.

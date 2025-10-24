@@ -14,7 +14,8 @@ export const useMessageSender = ({
 
   const handleSend = useCallback(
     async (text, images = []) => {
-      if ((!text?.trim() && images.length === 0) || !currentConversation) return;
+      if ((!text?.trim() && images.length === 0) || !currentConversation)
+        return;
       if (!currentUserId) return;
 
       const receiver = currentConversation.participants.find(
@@ -24,7 +25,6 @@ export const useMessageSender = ({
 
       setSending(true);
       setError(null);
-
       const optimisticMessage = {
         _id: `temp-${Date.now()}`,
         conversationId: currentConversation._id,
@@ -34,7 +34,9 @@ export const useMessageSender = ({
         images,
         createdAt: new Date().toISOString(),
         status: "sending",
+        isTemp: true, // ✅ Flag to identify temporary messages
       };
+      console.log("📝 Created TEMP message ID:", optimisticMessage._id);
       addMessage(optimisticMessage);
 
       try {
@@ -50,9 +52,8 @@ export const useMessageSender = ({
           ...response.data.data,
           conversationId: currentConversation._id,
         };
-
+        console.log("✅ Backend response ACTUAL message ID:", sentMessage);
         // Emit socket only (avoid duplicate optimistic insert)
-      
 
         stopTyping({ to: receiver._id, from: currentUserId });
         return sentMessage;
@@ -75,5 +76,11 @@ export const useMessageSender = ({
     if (receiver) emit("typing", { to: receiver._id, from: currentUserId });
   }, [currentConversation, currentUserId, emit]);
 
-  return { handleSend, handleTyping, sending, error, clearError: () => setError(null) };
+  return {
+    handleSend,
+    handleTyping,
+    sending,
+    error,
+    clearError: () => setError(null),
+  };
 };

@@ -1,17 +1,12 @@
 // hooks/useMessages.js
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useState } from "react";
 import axiosInstance from "../lib/axios";
+import { useChatStore } from "../store/chatStore";
 
 export const useMessages = (currentConversation) => {
-  const [messages, setMessages] = useState([]);
+  const { messages, setMessages, addMessage, clearMessages } = useChatStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const messagesRef = useRef(messages);
-
-  // keep messagesRef updated
-  useEffect(() => {
-    messagesRef.current = messages;
-  }, [messages]);
 
   const loadMessages = useCallback(async (conversationId) => {
     if (!conversationId) return setMessages([]);
@@ -33,40 +28,6 @@ export const useMessages = (currentConversation) => {
       setLoading(false);
     }
   }, []);
-
-  const clearMessages = useCallback(() => {
-    setMessages([]);
-    setError(null);
-  }, []);
-
-  // ✅ FIX: use functional update with ref to ensure always latest state
-  const addMessage = useCallback((message) => {
-  if (!message) return;
-
-  setMessages((prev) => {
-    const exists = prev.some((m) => m._id && m._id === message._id);
-    if (exists) return prev;
-
-    const optimisticIdx = prev.findIndex(
-      (m) =>
-        m._id?.startsWith("temp-") &&
-        m.message === message.message &&
-        m.sender?._id === message.sender?._id
-    );
-
-    const updated = [...prev];
-
-    if (optimisticIdx > -1) {
-      updated[optimisticIdx] = { ...message, status: "sent" };
-    } else {
-      updated.push(message);
-    }
-
-    return updated.sort(
-      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-    );
-  });
-}, []);
 
   useEffect(() => {
     if (currentConversation?._id) loadMessages(currentConversation._id);

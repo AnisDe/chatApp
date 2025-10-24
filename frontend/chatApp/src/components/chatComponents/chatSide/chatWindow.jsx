@@ -3,17 +3,19 @@ import ChatMessages from "./chatMessages";
 import ChatInput from "./chatInput";
 import "./chatWindow.css";
 import { isUserOnline } from "../../../utils/isOnline"; // adjust the path
+import { useChatStore } from "../../../store/chatStore";
 
 const ChatWindow = ({
-  messages,
   currentUserId,
   currentConversation,
   text,
   setText,
   onSend,
   typingUser,
-  onTyping,  onlineUsers, // 👈 added prop
+  onTyping,
+  onlineUsers, // 👈 added prop
 }) => {
+  const { messages } = useChatStore();
   // Identify the other participant
   const otherUser = currentConversation?.participants?.find(
     (p) => p._id !== currentUserId
@@ -41,12 +43,10 @@ const ChatWindow = ({
             {/* Username + status */}
             <div className="chat-header-text">
               <span className="chat-username">{otherUser.username}</span>
-         
             </div>
           </div>
         </div>
       )}
-
 
       {/* ✅ Messages section */}
       <div className="messages-section">

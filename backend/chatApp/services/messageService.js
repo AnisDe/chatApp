@@ -12,18 +12,20 @@ export const handlePrivateMessage = async (
   io,
   socket,
   { to, message, images = [], conversationId },
-  senderUser
+  senderUser,
+  messageId
 ) => {
   const from = senderUser._id.toString();
   const receiverUser = await User.findById(to).select("username");
 
   const payload = {
-    conversationId, // ✅ required for frontend filtering
+    _id: messageId,
+    conversationId,
     sender: { _id: from, username: senderUser.username },
     receiver: { _id: to, username: receiverUser?.username || "Unknown" },
     message,
     images,
-    createdAt: new Date().toISOString(), // consistent with frontend
+    createdAt: new Date().toISOString(),
   };
 
   io.to(to).emit("private_message", payload);
