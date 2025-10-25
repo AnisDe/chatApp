@@ -3,25 +3,23 @@ import ChatMessages from "./chatMessages";
 import ChatInput from "./chatInput";
 import "./chatWindow.css";
 import { isUserOnline } from "../../../utils/isOnline"; // adjust the path
-import { useChatStore } from "../../../store/chatStore";
 
 const ChatWindow = ({
   currentUserId,
   currentConversation,
+  messages,
   text,
   setText,
   onSend,
   typingUser,
   onTyping,
-  onlineUsers, // 👈 added prop
+  onlineUsers,
+  loading = false,
 }) => {
-  const { messages } = useChatStore();
   // Identify the other participant
   const otherUser = currentConversation?.participants?.find(
     (p) => p._id !== currentUserId
   );
-
-  // Check if the other user is online
   const isOnline = isUserOnline(otherUser?._id, onlineUsers);
 
   return (
@@ -45,16 +43,20 @@ const ChatWindow = ({
               <span className="chat-username">{otherUser.username}</span>
             </div>
           </div>
+
+          {/* Optional loading indicator */}
+          {loading && <div className="chat-loading">Loading messages...</div>}
         </div>
       )}
 
       {/* ✅ Messages section */}
       <div className="messages-section">
         <ChatMessages
-          messages={messages}
+          messages={messages || []} // 👈 Use messages from props
           currentUserId={currentUserId}
           currentConversation={currentConversation}
           typingUser={typingUser}
+          loading={loading}
         />
       </div>
 
@@ -64,6 +66,7 @@ const ChatWindow = ({
         setText={setText}
         onSend={onSend}
         onTyping={onTyping}
+        disabled={!currentConversation || loading} // 👈 Disable input when no conversation or loading
       />
     </div>
   );

@@ -1,47 +1,57 @@
 // hooks/useMessages.js
-import { useEffect, useCallback, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "../lib/axios";
-import { useChatStore } from "../store/chatStore";
 
 export const useMessages = (currentConversation) => {
-  const { messages, setMessages, addMessage, clearMessages } = useChatStore();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
 
-  const loadMessages = useCallback(async (conversationId) => {
-    if (!conversationId) return setMessages([]);
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await axiosInstance.get(`/messages/${conversationId}`);
-      const sorted = (res.data || []).sort(
+  // Fetch messages for current conversation
+  const {
+    data: messages = [],
+    isLoading: loading,
+    error,
+  } = useQuery({
+    queryKey: ["messages", currentConversation?._id],
+    queryFn: async () => {
+      if (!currentConversation?._id) return [];
+      const response = await axiosInstance.get(
+        `/messages/${currentConversation._id}`
+      );
+      return (response.data || []).sort(
         (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
       );
-      setMessages(sorted);
-    } catch (err) {
-      console.error("Failed to fetch messages:", err);
-      setError("Failed to load messages");
-      setMessages([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    enabled: !!currentConversation?._id,
+  });
 
-  useEffect(() => {
-    if (currentConversation?._id) loadMessages(currentConversation._id);
-    else clearMessages();
-  }, [currentConversation?._id, loadMessages, clearMessages]);
+  // Mutation for sending messages
+  const sendMessageMutation = useMutation({
+    mutationFn: async (messageData) => {
+      const response = await axiosInstance.post("/messages/send", messageData);
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate messages query to refetch
+      queryClient.invalidateQueries({
+        queryKey: ["messages", currentConversation?._id],
+      });
+    },
+  });
+
+  const clearMessages = () => {
+    // With React Query, clearing means resetting to empty array
+    queryClient.setQueryData(["messages", currentConversation?._id], []);
+  };
 
   return {
     messages,
     loading,
     error,
-    setMessages,
-    addMessage,
+    addMessage: sendMessageMutation.mutate,
     clearMessages,
     refetch: () =>
-      currentConversation?._id && loadMessages(currentConversation._id),
+      queryClient.invalidateQueries({
+        queryKey: ["messages", currentConversation?._id],
+      }),
   };
 };

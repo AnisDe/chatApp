@@ -1,17 +1,22 @@
 // hooks/useConversationManager.js
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useChatStore } from "../store/chatStore";
 import { useMessages } from "./useMessages";
 import axiosInstance from "../lib/axios";
 
 export const useConversationManager = (currentUserId) => {
   const { currentConversation, setCurrentConversation } = useChatStore();
-  const [chatHistory, setChatHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
 
-  const { messages, setMessages, addMessage, clearMessages } =
-    useMessages(currentConversation);
+  // This should now be the React Query version of useMessages
+  const {
+    messages,
+    addMessage,
+    clearMessages,
+    loading: messagesLoading,
+    error: messagesError,
+  } = useMessages(currentConversation);
 
   // Normalize participant data
   const normalizeParticipant = useCallback((participant) => {
@@ -22,76 +27,104 @@ export const useConversationManager = (currentUserId) => {
     };
   }, []);
 
-  // Update sidebar when a new message arrives
-  const handleReceivedMessage = useCallback(
-    (msg) => {
-      setChatHistory((prev) => {
-        const now = new Date().toISOString();
-        const existingConvIndex = prev.findIndex(
-          (conv) => conv._id === msg.conversationId
-        );
+  // Fetch chat history with React Query
+  const {
+    data: chatHistory = [],
+    isLoading: historyLoading,
+    error: historyError,
+    refetch: refetchChatHistory,
+  } = useQuery({
+    queryKey: ["chatHistory", currentUserId],
+    queryFn: async () => {
+      if (!currentUserId) return [];
 
-        if (existingConvIndex > -1) {
-          // Update existing conversation
-          const updated = [...prev];
-          const [existingConv] = updated.splice(existingConvIndex, 1);
-
-          return [
-            {
-              ...existingConv,
-              lastMessage: {
-                message: msg.message,
-                sender: normalizeParticipant(msg.sender),
-              },
-              lastMessageAt: now,
-            },
-            ...updated,
-          ];
-        } else {
-          // Create new conversation entry
-          const sender = normalizeParticipant(msg.sender);
-          const receiver = normalizeParticipant(msg.receiver);
-
-          const newConversation = {
-            _id: msg.conversationId,
-            participants: [sender, receiver].filter(Boolean),
-            lastMessage: {
-              message: msg.message,
-              sender,
-            },
-            lastMessageAt: now,
-          };
-
-          return [newConversation, ...prev];
-        }
-      });
-    },
-    [normalizeParticipant]
-  );
-
-  // Fetch chat history
-  const fetchChatHistory = useCallback(async () => {
-    if (!currentUserId) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
       const response = await axiosInstance.get(
         `/messages/history/${currentUserId}`
       );
-      const sortedHistory = response.data.sort(
+      return response.data.sort(
         (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
       );
-      setChatHistory(sortedHistory);
-    } catch (err) {
-      console.error("Failed to fetch chat history:", err);
-      setError("Failed to load conversations");
-      setChatHistory([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentUserId]);
+    },
+    enabled: !!currentUserId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 3,
+  });
+
+  // Mutation for creating a new conversation
+  const createConversationMutation = useMutation({
+    mutationFn: async (participants) => {
+      const response = await axiosInstance.post("/messages/conversation", {
+        participants,
+      });
+      return response.data.conversation;
+    },
+    onSuccess: (newConversation) => {
+      // Update the chat history cache with the new conversation
+      queryClient.setQueryData(
+        ["chatHistory", currentUserId],
+        (oldData = []) => {
+          return [newConversation, ...oldData];
+        }
+      );
+    },
+  });
+
+  // Update sidebar when a new message arrives
+  const handleReceivedMessage = useCallback(
+    (msg) => {
+      queryClient.setQueryData(
+        ["chatHistory", currentUserId],
+        (oldData = []) => {
+          const now = new Date().toISOString();
+          const existingConvIndex = oldData.findIndex(
+            (conv) => conv._id === msg.conversationId
+          );
+
+          if (existingConvIndex > -1) {
+            // Update existing conversation
+            const updated = [...oldData];
+            const [existingConv] = updated.splice(existingConvIndex, 1);
+
+            return [
+              {
+                ...existingConv,
+                lastMessage: {
+                  message: msg.message,
+                  sender: normalizeParticipant(msg.sender),
+                },
+                lastMessageAt: now,
+              },
+              ...updated,
+            ];
+          } else {
+            // Create new conversation entry
+            const sender = normalizeParticipant(msg.sender);
+            const receiver = normalizeParticipant(msg.receiver);
+
+            const newConversation = {
+              _id: msg.conversationId,
+              participants: [sender, receiver].filter(Boolean),
+              lastMessage: {
+                message: msg.message,
+                sender,
+              },
+              lastMessageAt: now,
+            };
+
+            return [newConversation, ...oldData];
+          }
+        }
+      );
+
+      // Also invalidate the current conversation's messages if this message belongs to it
+      if (currentConversation?._id === msg.conversationId) {
+        queryClient.invalidateQueries({
+          queryKey: ["messages", msg.conversationId],
+        });
+      }
+    },
+    [normalizeParticipant, queryClient, currentUserId, currentConversation]
+  );
 
   const handleSelectConversation = useCallback(
     async (conversationOrUser) => {
@@ -120,12 +153,11 @@ export const useConversationManager = (currentUserId) => {
         if (existingConversation) {
           setCurrentConversation(existingConversation);
         } else {
-          // Create new conversation on the server
-          const response = await axiosInstance.post("/messages/conversation", {
-            participants: [currentUserId, targetUserId],
-          });
-
-          const newConversation = response.data.conversation;
+          // Create new conversation using mutation
+          const newConversation = await createConversationMutation.mutateAsync([
+            currentUserId,
+            targetUserId,
+          ]);
 
           if (
             !newConversation ||
@@ -136,9 +168,7 @@ export const useConversationManager = (currentUserId) => {
             );
           }
 
-          // Update UI state
           setCurrentConversation(newConversation);
-          setChatHistory((prev) => [newConversation, ...prev]);
         }
       } catch (error) {
         console.error("Failed to select conversation:", error);
@@ -149,7 +179,12 @@ export const useConversationManager = (currentUserId) => {
         );
       }
     },
-    [currentUserId, chatHistory, setCurrentConversation]
+    [
+      currentUserId,
+      chatHistory,
+      setCurrentConversation,
+      createConversationMutation,
+    ]
   );
 
   // Clear current conversation
@@ -158,22 +193,23 @@ export const useConversationManager = (currentUserId) => {
     clearMessages();
   }, [setCurrentConversation, clearMessages]);
 
-  // Initial load
-  useEffect(() => {
-    fetchChatHistory();
-  }, [fetchChatHistory]);
+  // Invalidate and refetch chat history when needed
+  const invalidateChatHistory = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["chatHistory", currentUserId] });
+  }, [queryClient, currentUserId]);
 
   return {
     currentConversation,
     messages,
     chatHistory,
-    setChatHistory,
     addMessage,
     handleSelectConversation,
     handleReceivedMessage,
     clearCurrentConversation,
-    refetchChatHistory: fetchChatHistory,
-    loading,
-    error,
+    refetchChatHistory,
+    invalidateChatHistory,
+    loading: historyLoading || messagesLoading,
+    error: historyError || messagesError,
+    isCreatingConversation: createConversationMutation.isPending,
   };
 };
