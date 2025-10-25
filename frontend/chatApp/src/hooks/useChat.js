@@ -9,30 +9,30 @@ import { useSocketEvents } from "./useSocketEvents";
 export const useChat = (currentUserId) => {
   // State management
   const conversationManager = useConversationManager(currentUserId);
-  const { 
-    currentConversation, 
-    messages, 
-    chatHistory, 
-    addMessage, 
+  const {
+    currentConversation,
+    messages,
+    chatHistory,
+    addMessage,
     handleSelectConversation,
-    setChatHistory 
+    setChatHistory,
   } = conversationManager;
-  
+
   // User search
   const userSearch = useUserSearch();
-  
+
   // Socket connection
   const socket = useSocket(currentUserId);
-  const { 
-    socket: socketInstance, 
-    onlineUsers, 
-    typingUser, 
-    isConnected, 
-    on, 
-    off, 
-    emit, 
-    startTyping,  
-    stopTyping 
+  const {
+    socket: socketInstance,
+    onlineUsers,
+    typingUser,
+    isConnected,
+    on,
+    off,
+    emit,
+    startTyping,
+    stopTyping,
   } = socket;
 
   // Message sending
@@ -41,7 +41,7 @@ export const useChat = (currentUserId) => {
     currentConversation,
     emit,
     addMessage,
-    stopTyping
+    stopTyping,
   });
 
   // Socket events
@@ -53,7 +53,7 @@ export const useChat = (currentUserId) => {
     off,
     addMessage,
     handleReceivedMessage: conversationManager.handleReceivedMessage,
-    handleSelectConversation
+    handleSelectConversation,
   });
 
   // Cleanup effect
@@ -66,9 +66,12 @@ export const useChat = (currentUserId) => {
   }, [currentConversation, currentUserId, stopTyping]);
 
   // Combined handlers
-  const handleSend = useCallback((text, images = []) => {
-    return messageSender.handleSend(text, images);
-  }, [messageSender]);
+  const handleSend = useCallback(
+    (text, images = []) => {
+      return messageSender.handleSend(text, images);
+    },
+    [messageSender]
+  );
 
   const handleTyping = useCallback(() => {
     return messageSender.handleTyping();

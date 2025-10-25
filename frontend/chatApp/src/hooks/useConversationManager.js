@@ -1,21 +1,97 @@
 // hooks/useConversationManager.js
-import { useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useChatStore } from "../store/chatStore";
-import { useChatHistory } from "./useChatHistory";
 import { useMessages } from "./useMessages";
 import axiosInstance from "../lib/axios";
 
 export const useConversationManager = (currentUserId) => {
   const { currentConversation, setCurrentConversation } = useChatStore();
-  const {
-    chatHistory,
-    setChatHistory,
-    handleReceivedMessage,
-    refetch: refetchChatHistory,
-  } = useChatHistory(currentUserId);
+  const [chatHistory, setChatHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const { messages, setMessages, addMessage, clearMessages } =
     useMessages(currentConversation);
+
+  // Normalize participant data
+  const normalizeParticipant = useCallback((participant) => {
+    if (!participant) return null;
+    return {
+      _id: participant._id || participant,
+      username: participant.username || "Unknown User",
+    };
+  }, []);
+
+  // Update sidebar when a new message arrives
+  const handleReceivedMessage = useCallback(
+    (msg) => {
+      setChatHistory((prev) => {
+        const now = new Date().toISOString();
+        const existingConvIndex = prev.findIndex(
+          (conv) => conv._id === msg.conversationId
+        );
+
+        if (existingConvIndex > -1) {
+          // Update existing conversation
+          const updated = [...prev];
+          const [existingConv] = updated.splice(existingConvIndex, 1);
+
+          return [
+            {
+              ...existingConv,
+              lastMessage: {
+                message: msg.message,
+                sender: normalizeParticipant(msg.sender),
+              },
+              lastMessageAt: now,
+            },
+            ...updated,
+          ];
+        } else {
+          // Create new conversation entry
+          const sender = normalizeParticipant(msg.sender);
+          const receiver = normalizeParticipant(msg.receiver);
+
+          const newConversation = {
+            _id: msg.conversationId,
+            participants: [sender, receiver].filter(Boolean),
+            lastMessage: {
+              message: msg.message,
+              sender,
+            },
+            lastMessageAt: now,
+          };
+
+          return [newConversation, ...prev];
+        }
+      });
+    },
+    [normalizeParticipant]
+  );
+
+  // Fetch chat history
+  const fetchChatHistory = useCallback(async () => {
+    if (!currentUserId) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await axiosInstance.get(
+        `/messages/history/${currentUserId}`
+      );
+      const sortedHistory = response.data.sort(
+        (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
+      );
+      setChatHistory(sortedHistory);
+    } catch (err) {
+      console.error("Failed to fetch chat history:", err);
+      setError("Failed to load conversations");
+      setChatHistory([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUserId]);
 
   const handleSelectConversation = useCallback(
     async (conversationOrUser) => {
@@ -49,7 +125,6 @@ export const useConversationManager = (currentUserId) => {
             participants: [currentUserId, targetUserId],
           });
 
-          // Axios responses typically look like { data: {...}, status, headers, ... }
           const newConversation = response.data.conversation;
 
           if (
@@ -74,7 +149,7 @@ export const useConversationManager = (currentUserId) => {
         );
       }
     },
-    [currentUserId, chatHistory, setCurrentConversation, setChatHistory]
+    [currentUserId, chatHistory, setCurrentConversation]
   );
 
   // Clear current conversation
@@ -82,6 +157,11 @@ export const useConversationManager = (currentUserId) => {
     setCurrentConversation(null);
     clearMessages();
   }, [setCurrentConversation, clearMessages]);
+
+  // Initial load
+  useEffect(() => {
+    fetchChatHistory();
+  }, [fetchChatHistory]);
 
   return {
     currentConversation,
@@ -92,6 +172,8 @@ export const useConversationManager = (currentUserId) => {
     handleSelectConversation,
     handleReceivedMessage,
     clearCurrentConversation,
-    refetchChatHistory,
+    refetchChatHistory: fetchChatHistory,
+    loading,
+    error,
   };
 };
