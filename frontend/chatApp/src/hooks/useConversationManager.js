@@ -14,6 +14,7 @@ export const useConversationManager = (currentUserId) => {
     messages,
     addMessage,
     clearMessages,
+    replaceMessage,
     loading: messagesLoading,
     error: messagesError,
   } = useMessages(currentConversation);
@@ -201,6 +202,7 @@ export const useConversationManager = (currentUserId) => {
   return {
     currentConversation,
     messages,
+    replaceMessage,
     chatHistory,
     addMessage,
     handleSelectConversation,

@@ -16,6 +16,7 @@ export const useChat = (currentUserId) => {
     addMessage,
     handleSelectConversation,
     setChatHistory,
+    replaceMessage,
   } = conversationManager;
 
   // User search
@@ -43,6 +44,7 @@ export const useChat = (currentUserId) => {
     addMessage,
     startTyping, // ✅ pass it here
     stopTyping,
+    replaceMessage,
   });
 
   // Socket events
