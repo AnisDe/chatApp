@@ -26,7 +26,7 @@ const ChatHistory = ({
         prev.filter((conv) => conv._id !== conversationId)
       );
 
-      // 🧠 Close the conversation if it's currently open
+      // Close the conversation if it's currently open
       if (currentConversation?._id === conversationId) {
         clearCurrentConversation();
       }

@@ -11,6 +11,7 @@ const ChatWindow = ({
   text,
   setText,
   onSend,
+  stopTyping,
   typingUser,
   onTyping,
   onlineUsers,
@@ -66,7 +67,10 @@ const ChatWindow = ({
         setText={setText}
         onSend={onSend}
         onTyping={onTyping}
-        disabled={!currentConversation || loading} // 👈 Disable input when no conversation or loading
+        stopTyping={stopTyping}
+        currentConversation={currentConversation}
+        currentUserId={currentUserId}
+        disabled={!currentConversation || loading}
       />
     </div>
   );

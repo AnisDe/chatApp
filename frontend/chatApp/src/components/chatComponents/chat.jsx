@@ -27,15 +27,12 @@ const Chat = ({ currentUserId }) => {
     handleSend: sendMessage,
     handleTyping,
     setSearchTerm,
+    stopTyping,
   } = useChat(currentUserId);
 
   const handleSend = (text, images = []) => {
     sendMessage(text, images);
     setText("");
-  };
-
-  const handleInputTyping = () => {
-    handleTyping();
   };
 
   return (
@@ -63,8 +60,9 @@ const Chat = ({ currentUserId }) => {
         text={text}
         setText={setText}
         onSend={handleSend}
-        onTyping={handleInputTyping}
+        onTyping={handleTyping}
         typingUser={typingUser}
+        stopTyping={stopTyping}
         connectionStatus={isConnected ? "connected" : "disconnected"}
         onlineUsers={onlineUsers}
       />

@@ -13,7 +13,7 @@ export const useSocket = (currentUserId) => {
 
   const typingTimeoutRef = useRef(null);
   const eventHandlersRef = useRef(new Map());
-//Any existing handlers for the event are removed to avoid duplicates
+  //Any existing handlers for the event are removed to avoid duplicates
   const on = useCallback(
     (event, handler) => {
       if (!socket) return;
@@ -24,7 +24,7 @@ export const useSocket = (currentUserId) => {
     },
     [socket]
   );
-//Removes either a specific handler or all handlers for a given event
+  //Removes either a specific handler or all handlers for a given event
   const off = useCallback(
     (event, handler) => {
       if (!socket) return;
@@ -45,10 +45,10 @@ export const useSocket = (currentUserId) => {
     },
     [socket, isConnected]
   );
-//Manages typing indicators with a timeout to reset the state
+  //Manages typing indicators with a timeout to reset the state
   const startTyping = useCallback(
     ({ to, from }) => {
-      if (!emit("typing", { to, from })) return;
+      emit("typing", { to, from });
       clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = setTimeout(() => {
         emit("stop_typing", { to, from });
@@ -57,7 +57,8 @@ export const useSocket = (currentUserId) => {
     },
     [emit]
   );
-//Stops typing indicator immediately when user stops typing
+
+  //Stops typing indicator immediately when user stops typing
   const stopTyping = useCallback(
     ({ to, from }) => {
       emit("stop_typing", { to, from });
@@ -65,7 +66,8 @@ export const useSocket = (currentUserId) => {
     },
     [emit]
   );
-//Establishes socket connection and sets up core event listeners
+
+  //Establishes socket connection and sets up core event listeners
   useEffect(() => {
     if (!currentUserId) return;
     const s = io(SOCKET_URL, {
@@ -86,8 +88,8 @@ export const useSocket = (currentUserId) => {
     s.on("connect", handleConnect);
     s.on("disconnect", handleDisconnect);
     s.on("online_users", handleOnlineUsers);
-    s.on("user_typing", handleUserTyping);
-    s.on("user_stop_typing", handleUserStopTyping);
+    s.on("typing", handleUserTyping);
+    s.on("stop_typing", handleUserStopTyping);
 
     eventHandlersRef.current.clear();
     setSocket(s);

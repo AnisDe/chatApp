@@ -31,7 +31,7 @@ export const useChat = (currentUserId) => {
     on,
     off,
     emit,
-    startTyping,
+    startTyping, // ✅ include this
     stopTyping,
   } = socket;
 
@@ -41,6 +41,7 @@ export const useChat = (currentUserId) => {
     currentConversation,
     emit,
     addMessage,
+    startTyping, // ✅ pass it here
     stopTyping,
   });
 
@@ -56,7 +57,7 @@ export const useChat = (currentUserId) => {
     handleSelectConversation,
   });
 
-  // Cleanup effect
+  // Cleanup effect: stop typing when conversation closes
   useEffect(() => {
     return () => {
       if (currentConversation && currentUserId) {
@@ -67,15 +68,14 @@ export const useChat = (currentUserId) => {
 
   // Combined handlers
   const handleSend = useCallback(
-    (text, images = []) => {
-      return messageSender.handleSend(text, images);
-    },
+    (text, images = []) => messageSender.handleSend(text, images),
     [messageSender]
   );
 
-  const handleTyping = useCallback(() => {
-    return messageSender.handleTyping();
-  }, [messageSender]);
+  const handleTyping = useCallback(
+    () => messageSender.handleTyping(),
+    [messageSender]
+  );
 
   return {
     // State
@@ -88,7 +88,7 @@ export const useChat = (currentUserId) => {
     chatHistory,
     typingUser,
     isConnected,
-
+    stopTyping,
     // Setters
     setSearchTerm: userSearch.setSearchTerm,
     setChatHistory,

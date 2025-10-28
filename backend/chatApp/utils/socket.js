@@ -11,8 +11,6 @@ const initSocket = (io, getUserFromSession) => {
   const onlineUsers = new Map();
 
   io.on("connection", async (socket) => {
-    console.log("🟢 New client connected:", socket.id);
-
     try {
       const username = getUserFromSession(socket.request);
       if (!username) return socket.disconnect();
@@ -25,7 +23,6 @@ const initSocket = (io, getUserFromSession) => {
       // ✅ Always join the room by user ID
       socket.join(userId);
       onlineUsers.set(userId, true); // just mark as online (no socket.id)
-      console.log(`${userId} joined its personal room`);
 
       io.emit("online_users", Array.from(onlineUsers.keys()));
 
@@ -52,7 +49,6 @@ const initSocket = (io, getUserFromSession) => {
       socket.on("disconnect", () => {
         onlineUsers.delete(userId);
         io.emit("online_users", Array.from(onlineUsers.keys()));
-        console.log(`🔴 ${userId} disconnected`);
       });
     } catch (err) {
       console.error("Socket connection error:", err);

@@ -1,11 +1,10 @@
-// hooks/useMessages.js
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "../lib/axios";
 
 export const useMessages = (currentConversation) => {
   const queryClient = useQueryClient();
 
-  // Fetch messages for current conversation
+  // Fetch messages for the current conversation
   const {
     data: messages = [],
     isLoading: loading,
@@ -24,22 +23,40 @@ export const useMessages = (currentConversation) => {
     enabled: !!currentConversation?._id,
   });
 
-  // Mutation for sending messages
+  // Local mutation (manual optimistic sync)
   const sendMessageMutation = useMutation({
     mutationFn: async (messageData) => {
       const response = await axiosInstance.post("/messages/send", messageData);
-      return response.data;
-    },
-    onSuccess: () => {
-      // Invalidate messages query to refetch
-      queryClient.invalidateQueries({
-        queryKey: ["messages", currentConversation?._id],
-      });
+      return response.data.data;
     },
   });
 
+  // Add message manually (for optimistic updates)
+  const addMessage = (msg) => {
+    if (!currentConversation?._id) return;
+    queryClient.setQueryData(
+      ["messages", currentConversation._id],
+      (old = []) => {
+        const exists = old.some((m) => m._id === msg._id);
+        if (exists) return old;
+        return [...old, msg].sort(
+          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+        );
+      }
+    );
+  };
+
+  // Replace optimistic message with confirmed one
+  const replaceMessage = (tempId, realMessage) => {
+    if (!currentConversation?._id) return;
+    queryClient.setQueryData(
+      ["messages", currentConversation._id],
+      (old = []) => old.map((m) => (m._id === tempId ? realMessage : m))
+    );
+  };
+
+  // Clear messages (used when switching conversation)
   const clearMessages = () => {
-    // With React Query, clearing means resetting to empty array
     queryClient.setQueryData(["messages", currentConversation?._id], []);
   };
 
@@ -47,11 +64,9 @@ export const useMessages = (currentConversation) => {
     messages,
     loading,
     error,
-    addMessage: sendMessageMutation.mutate,
+    addMessage,
+    replaceMessage,
+    sendMessageMutation,
     clearMessages,
-    refetch: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["messages", currentConversation?._id],
-      }),
   };
 };

@@ -13,9 +13,9 @@ const ChatMessages = ({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typingUser]);
 
-  // 🧠 Find the other participant for display names
+  // Find the other participant for display names
   const otherUser = currentConversation?.participants?.find(
-    (p) => p._id !== currentUserId,
+    (p) => p._id !== currentUserId
   );
 
   return (

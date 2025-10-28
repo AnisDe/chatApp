@@ -10,7 +10,6 @@ const RegisterPage = () => {
     email: "",
     username: "",
     password: "",
-
   });
   const [message, setMessage] = useState("");
   const [passwordErrors, setPasswordErrors] = useState([]);
@@ -52,7 +51,7 @@ const RegisterPage = () => {
     }
   };
 
-  // 📧 Resend verification
+  // Resend verification
   const handleResend = async () => {
     if (!form.email) {
       setResendMessage("Please enter your email first.");
@@ -65,7 +64,7 @@ const RegisterPage = () => {
       setResendMessage(res.data.message);
     } catch (err) {
       setResendMessage(
-        err.response?.data?.message || "Error resending verification email.",
+        err.response?.data?.message || "Error resending verification email."
       );
     }
   };
@@ -162,20 +161,19 @@ const RegisterPage = () => {
               )}
           </div>
 
-      
           <button type="submit">Register</button>
-          <p className='message'>{message}</p>
+          <p className="message">{message}</p>
         </form>
 
         {message.includes(
-          "User registered successfully. Please check your email.",
+          "User registered successfully. Please check your email."
         ) && (
           <div className="resend-section">
             <p>Didn’t get the email?</p>
             <button type="button" onClick={handleResend}>
               Resend Verification Email
             </button>
-            {resendMessage && <p className='message'> {resendMessage}</p>}
+            {resendMessage && <p className="message"> {resendMessage}</p>}
           </div>
         )}
 
