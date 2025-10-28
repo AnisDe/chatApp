@@ -128,64 +128,42 @@ export const useConversationManager = (currentUserId) => {
   );
 
   const handleSelectConversation = useCallback(
-    async (conversationOrUser) => {
-      if (!currentUserId) {
-        throw new Error("User must be logged in to select conversation");
+    (conversationOrUser) => {
+      if (!currentUserId) throw new Error("User must be logged in");
+
+      // Existing conversation (from history)
+      if (Array.isArray(conversationOrUser.participants)) {
+        setCurrentConversation(conversationOrUser);
+        return;
       }
 
-      try {
-        // 🟩 Case 1: Existing conversation (from chat history)
-        if (Array.isArray(conversationOrUser.participants)) {
-          setCurrentConversation(conversationOrUser);
-          return;
-        }
+      // New user from search (no conversation yet)
+      const targetUserId = conversationOrUser._id;
+      if (!targetUserId) throw new Error("Invalid user");
 
-        // 🟩 Case 2: New user from search - find or create conversation
-        const targetUserId = conversationOrUser._id;
-        if (!targetUserId) {
-          throw new Error("Invalid user selected (missing _id)");
-        }
+      // Check if conversation already exists
+      const existingConversation = chatHistory.find((conv) =>
+        conv.participants?.some((p) => p._id === targetUserId)
+      );
 
-        // Safely check if a conversation already exists
-        const existingConversation = chatHistory.find((conv) =>
-          conv.participants?.some((p) => p._id === targetUserId)
-        );
-
-        if (existingConversation) {
-          setCurrentConversation(existingConversation);
-        } else {
-          // Create new conversation using mutation
-          const newConversation = await createConversationMutation.mutateAsync([
-            currentUserId,
-            targetUserId,
-          ]);
-
-          if (
-            !newConversation ||
-            !Array.isArray(newConversation.participants)
-          ) {
-            throw new Error(
-              "Invalid response format when creating conversation"
-            );
-          }
-
-          setCurrentConversation(newConversation);
-        }
-      } catch (error) {
-        console.error("Failed to select conversation:", error);
-        throw new Error(
-          `Could not start conversation: ${
-            error.response?.data?.message || error.message
-          }`
-        );
+      if (existingConversation) {
+        setCurrentConversation(existingConversation);
+      } else {
+        // 🟩 Build a temporary "pending" conversation with visible username
+        setCurrentConversation({
+          participants: [
+            { _id: currentUserId }, // current user (can remain minimal)
+            {
+              _id: conversationOrUser._id,
+              username: conversationOrUser.username || "Unknown User",
+              profilePic: conversationOrUser.profilePic || null, // optional
+            },
+          ],
+          isPending: true,
+        });
       }
     },
-    [
-      currentUserId,
-      chatHistory,
-      setCurrentConversation,
-      createConversationMutation,
-    ]
+    [currentUserId, chatHistory, setCurrentConversation]
   );
 
   // Clear current conversation
