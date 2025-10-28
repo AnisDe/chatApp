@@ -7,7 +7,6 @@ const ChatMessage = ({ message, isCurrentUser, senderName }) => {
   return (
     <div className={`chat-message ${isCurrentUser ? "user" : "other"}`}>
       <b>{senderName}:</b> {message.message}
-
       {hasImages && (
         <div className="message-images">
           {message.images.map((img, index) => {
@@ -17,6 +16,8 @@ const ChatMessage = ({ message, isCurrentUser, senderName }) => {
               <img
                 key={index}
                 src={src}
+                height={300}
+                width={300}
                 alt={`attachment-${index}`}
                 className="chat-image"
                 loading="lazy"
