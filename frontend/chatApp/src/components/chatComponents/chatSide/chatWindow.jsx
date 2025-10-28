@@ -2,7 +2,7 @@ import React from "react";
 import ChatMessages from "./chatMessages";
 import ChatInput from "./chatInput";
 import "./chatWindow.css";
-import { isUserOnline } from "../../../utils/isOnline"; // adjust the path
+import { isUserOnline } from "../../../utils/isOnline";
 
 const ChatWindow = ({
   currentUserId,
@@ -29,7 +29,6 @@ const ChatWindow = ({
       {otherUser && (
         <div className="chat-header">
           <div className="chat-header-info">
-            {/* Avatar */}
             <div className="chat-avatar">
               {otherUser.username?.[0]?.toUpperCase() || "?"}
               <span
@@ -39,39 +38,43 @@ const ChatWindow = ({
               ></span>
             </div>
 
-            {/* Username + status */}
             <div className="chat-header-text">
               <span className="chat-username">{otherUser.username}</span>
             </div>
           </div>
 
-          {/* Optional loading indicator */}
           {loading && <div className="chat-loading">Loading messages...</div>}
         </div>
       )}
 
       {/* ✅ Messages section */}
       <div className="messages-section">
-        <ChatMessages
-          messages={messages || []} // 👈 Use messages from props
-          currentUserId={currentUserId}
-          currentConversation={currentConversation}
-          typingUser={typingUser}
-          loading={loading}
-        />
+        {currentConversation ? (
+          <ChatMessages
+            messages={messages || []}
+            currentUserId={currentUserId}
+            currentConversation={currentConversation}
+            typingUser={typingUser}
+            loading={loading}
+          />
+        ) : (
+          <div className="no-conversation">null</div>
+        )}
       </div>
 
-      {/* ✅ Input section */}
-      <ChatInput
-        text={text}
-        setText={setText}
-        onSend={onSend}
-        onTyping={onTyping}
-        stopTyping={stopTyping}
-        currentConversation={currentConversation}
-        currentUserId={currentUserId}
-        disabled={!currentConversation || loading}
-      />
+      {/* ✅ Input section (only show if a conversation is selected) */}
+      {currentConversation && (
+        <ChatInput
+          text={text}
+          setText={setText}
+          onSend={onSend}
+          onTyping={onTyping}
+          stopTyping={stopTyping}
+          currentConversation={currentConversation}
+          currentUserId={currentUserId}
+          disabled={loading}
+        />
+      )}
     </div>
   );
 };
