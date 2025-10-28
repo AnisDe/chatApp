@@ -21,7 +21,6 @@ const Chat = ({ currentUserId }) => {
     chatHistory,
     typingUser,
     isConnected,
-    setChatHistory,
     // ✅ Actions
     handleSelectConversation,
     handleSend: sendMessage,
@@ -49,7 +48,6 @@ const Chat = ({ currentUserId }) => {
         onlineUsers={onlineUsers}
         loading={loading}
         chatHistory={chatHistory}
-        setChatHistory={setChatHistory} // ✅ no more ReferenceError
         connectionStatus={isConnected ? "connected" : "disconnected"}
       />
 

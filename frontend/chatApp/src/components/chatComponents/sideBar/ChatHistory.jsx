@@ -2,7 +2,8 @@ import React from "react";
 import "./Sidebar.css";
 import axiosInstance from "../../../lib/axios";
 import { isUserOnline } from "../../../utils/isOnline";
-import { useConversationManager } from "../../../hooks/useConversationManager"; // ✅ import your hook
+import { useConversationManager } from "../../../hooks/useConversationManager";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ChatHistory = ({
   chatHistory,
@@ -10,9 +11,10 @@ const ChatHistory = ({
   currentUserId,
   onSelectConversation,
   onlineUsers,
-  setChatHistory,
 }) => {
-  const { clearCurrentConversation } = useConversationManager(currentUserId); // ✅ grab the clear function
+  const queryClient = useQueryClient(); // ✅ get React Query client safely
+  const { clearCurrentConversation, refetchChatHistory } =
+    useConversationManager(currentUserId);
 
   const handleDeleteConversation = async (conversationId, e) => {
     e.stopPropagation();
@@ -21,14 +23,22 @@ const ChatHistory = ({
       return;
 
     try {
-      await axiosInstance.delete(`/messages/conversation/${conversationId}`);
-      setChatHistory((prev) =>
-        prev.filter((conv) => conv._id !== conversationId)
+      const res = await axiosInstance.delete(
+        `/messages/conversation/${conversationId}`
       );
 
-      // Close the conversation if it's currently open
-      if (currentConversation?._id === conversationId) {
-        clearCurrentConversation();
+      if (res.status === 200) {
+        // ✅ Update cached chat history
+        queryClient.setQueryData(["chatHistory", currentUserId], (old = []) =>
+          old.filter((conv) => conv._id !== conversationId)
+        );
+
+        // ✅ Clear open conversation if needed
+        if (currentConversation?._id === conversationId)
+          clearCurrentConversation();
+
+        // Optional sync with backend
+        refetchChatHistory?.();
       }
     } catch (err) {
       console.error("Failed to delete conversation:", err);
