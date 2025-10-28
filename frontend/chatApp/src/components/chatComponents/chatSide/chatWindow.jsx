@@ -57,9 +57,7 @@ const ChatWindow = ({
             typingUser={typingUser}
             loading={loading}
           />
-        ) : (
-          <div className="no-conversation">null</div>
-        )}
+        ) : null}
       </div>
 
       {/* ✅ Input section (only show if a conversation is selected) */}
