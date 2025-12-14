@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
-import "./loginPage.css";
+import "./registerPage.css";
 import { useAuth } from "./AuthContext";
 import axiosInstance from "../../lib/axios";
 import { validatePassword } from "../../utils/validation";
@@ -70,16 +70,17 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-left">
-        <h2>Register</h2>
+    <div className="register-container">
+      <div className="register-left">
+        <h2 className="register-title">Register</h2>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="register-form">
           <input
             name="email"
             type="email"
             onChange={handleChange}
             placeholder="Email"
+            className="register-input"
             required
           />
           <input
@@ -87,24 +88,25 @@ const RegisterPage = () => {
             type="text"
             onChange={handleChange}
             placeholder="Username"
+            className="register-input"
             required
           />
 
-          <div className="password-wrapper">
+          <div className="register-password-wrapper">
             <input
               name="password"
               type={showPassword ? "text" : "password"}
               value={form.password}
               onChange={handleChange}
               placeholder="Password"
-              className="password-input"
+              className="register-input register-password-input"
               required
             />
 
             {form.password && (
               <span
                 onClick={() => setShowPassword(!showPassword)}
-                className="show-toggle"
+                className="register-show-toggle"
               >
                 {showPassword ? "Hide" : "Show"}
               </span>
@@ -119,39 +121,49 @@ const RegisterPage = () => {
                 /\d/.test(form.password) &&
                 /[!@#$%^&*(),.?":{}|<>]/.test(form.password)
               ) && (
-                <div className="password-popup">
-                  <ul>
+                <div className="password-requirements-popup">
+                  <ul className="requirements-list">
                     <li
                       className={
-                        form.password.length >= 8 ? "valid" : "invalid"
+                        form.password.length >= 8
+                          ? "requirement-valid"
+                          : "requirement-invalid"
                       }
                     >
                       At least 8 characters
                     </li>
                     <li
                       className={
-                        /[A-Z]/.test(form.password) ? "valid" : "invalid"
+                        /[A-Z]/.test(form.password)
+                          ? "requirement-valid"
+                          : "requirement-invalid"
                       }
                     >
                       One uppercase letter
                     </li>
                     <li
                       className={
-                        /[a-z]/.test(form.password) ? "valid" : "invalid"
+                        /[a-z]/.test(form.password)
+                          ? "requirement-valid"
+                          : "requirement-invalid"
                       }
                     >
                       One lowercase letter
                     </li>
                     <li
-                      className={/\d/.test(form.password) ? "valid" : "invalid"}
+                      className={
+                        /\d/.test(form.password)
+                          ? "requirement-valid"
+                          : "requirement-invalid"
+                      }
                     >
                       One number
                     </li>
                     <li
                       className={
                         /[!@#$%^&*(),.?":{}|<>]/.test(form.password)
-                          ? "valid"
-                          : "invalid"
+                          ? "requirement-valid"
+                          : "requirement-invalid"
                       }
                     >
                       One special character
@@ -161,23 +173,27 @@ const RegisterPage = () => {
               )}
           </div>
 
-          <button type="submit">Register</button>
-          <p className="message">{message}</p>
+          <button type="submit" className="register-btn">
+            Register
+          </button>
+          <p className="register-message">{message}</p>
         </form>
 
         {message.includes(
           "User registered successfully. Please check your email."
         ) && (
           <div className="resend-section">
-            <p>Didn’t get the email?</p>
-            <button type="button" onClick={handleResend}>
+            <p className="resend-text">Didn't get the email?</p>
+            <button type="button" onClick={handleResend} className="resend-btn">
               Resend Verification Email
             </button>
-            {resendMessage && <p className="message"> {resendMessage}</p>}
+            {resendMessage && (
+              <p className="register-message">{resendMessage}</p>
+            )}
           </div>
         )}
 
-        <p className="extra-links">
+        <p className="register-extra-links">
           Have an account?{" "}
           <Link to="/login">
             <b>Log in</b>
@@ -185,16 +201,16 @@ const RegisterPage = () => {
         </p>
       </div>
 
-      <div className="login-right">
-        <div className="promo">
-          <h2>Welcome</h2>
-          <p>
+      <div className="register-right">
+        <div className="register-promo">
+          <h2 className="register-promo-title">Welcome</h2>
+          <p className="register-promo-description">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Tenetur
             veniam voluptatem magni, obcaecati aperiam mollitia quisquam
             distinctio explicabo itaque cumque excepturi nesciunt doloremque
             unde consequuntur omnis cum provident. Animi, cupiditate.
           </p>
-          <button className="learn-btn">Learn More ›</button>
+          <button className="register-learn-btn">Learn More ›</button>
         </div>
       </div>
     </div>

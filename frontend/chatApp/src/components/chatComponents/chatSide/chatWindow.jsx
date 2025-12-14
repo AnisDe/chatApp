@@ -22,7 +22,6 @@ const ChatWindow = ({
     (p) => p._id !== currentUserId
   );
   const isOnline = isUserOnline(otherUser?._id, onlineUsers);
-
   return (
     <div className="chat-main">
       {/* ✅ Chat header */}

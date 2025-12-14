@@ -18,6 +18,14 @@ const ChatMessages = ({
     (p) => p._id !== currentUserId
   );
 
+  // Debug: Check if typing indicator should show
+  console.log("Typing user:", typingUser);
+  console.log("Other user ID:", otherUser?._id);
+  console.log(
+    "Should show typing:",
+    typingUser && otherUser && typingUser === otherUser._id
+  );
+
   return (
     <div className="chat-messages">
       {messages.map((m, i) => {
@@ -37,16 +45,25 @@ const ChatMessages = ({
         );
       })}
 
-      {/* Typing indicator bubble */}
-      {typingUser && otherUser && typingUser === otherUser._id && (
-        <div className="message received typing-bubble">
-          <div className="dots">
-            <span></span>
-            <span></span>
-            <span></span>
+      {/* Typing indicator - Fixed structure */}
+      {/* Typing indicator - Only show if it's the OTHER user typing */}
+      {typingUser &&
+        otherUser &&
+        typingUser === otherUser._id &&
+        typingUser !== currentUserId && ( // ✅ Extra safety check
+          <div className="chat-message other">
+            <div className="message-avatar">
+              {otherUser.username?.[0]?.toUpperCase() || "?"}
+            </div>
+            <div className="typing-bubble">
+              <div className="dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       <div ref={messagesEndRef} />
     </div>

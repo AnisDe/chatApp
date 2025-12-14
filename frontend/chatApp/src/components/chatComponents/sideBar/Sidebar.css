@@ -1,328 +1,341 @@
-:root {
-  --bg-left: linear-gradient(135deg, #0A1931, #134E5E);
-}
-
+/* === Sidebar === */
 .chat-sidebar {
-  width: 300px;
-  background: var(--bg-left);
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+  width: 360px;
+  background: var(--bg-primary);
+  border-right: 1px solid var(--neutral-200);
   display: flex;
   flex-direction: column;
-  padding: 20px;
-  position: fixed; /* Make sidebar fixed on the left */
-  top: 60px; /* Adjust for navbar height */
+  position: fixed;
   left: 0;
-  height: calc(100vh - 60px); /* Sidebar should take up full screen height minus navbar */
+  height: 100vh;
   z-index: 100;
-  overflow-y: auto;
+  margin-left: 80px;
+  overflow: hidden;
 }
 
-
+.chat-sidebar h3 {
+  padding: 24px 5px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.5px;
+}
 .search-container {
-  position: relative;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--neutral-200);
+  padding: 20px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  z-index: 10;
+  height: 105px;
+  margin-bottom: 25px;
 }
 
+.sidebar-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+.search-box {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  margin-right: 7px;
+  margin-left: 5px;
+  background-color: var(--bg-secondary);
+  margin-bottom: 12px;
+  color: var(--text-primary);
+  margin-top: 10px;
+  width: 100%;
+  padding: 14px;
+}
+
+.search-input:focus {
+  background: var(--bg-primary);
+  border-color: var(--neutral-300);
+}
+
+.search-icon {
+  position: absolute;
+  right: 22px;
+  top: 22px;
+  font-size: 14px;
+  pointer-events: none;
+  opacity: 1;
+}
+
+.add-chat-btn {
+  width: 43px;
+  height: 43px;
+  border-radius: 50%;
+  background: var(--primary-500);
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Search Popup */
 .search-popup {
   position: absolute;
-  top: 100%; /* Position below the search input */
+  top: 100%;
   left: 0;
-  right: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  max-height: 200px; /* Prevent the popup from growing too large */
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  max-height: 320px;
   overflow-y: auto;
-  color: black;
+  z-index: 1000;
 }
 
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 .popup-header {
-  padding: 12px 16px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
+  padding: 14px 20px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--neutral-200);
   font-weight: 600;
-  color: #495057;
-  border-radius: 8px 8px 0 0;
-}
-
-button {
-  margin-top: 0;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .popup-user-item {
   width: 100%;
-  padding: 12px 16px;
+  padding: 14px 20px;
   border: none;
   background: none;
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.2s;
-  color: black;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  border-radius: 0;
+  margin: 0;
 }
 
 .popup-user-item:hover {
-  background-color: #f8f9fa;
+  background: var(--bg-tertiary);
 }
 
 .popup-user-item:active {
-  background-color: #e9ecef;
+  background: var(--neutral-200);
 }
 
-/* Ensure input stays above popup */
-.search-container input {
-  position: relative;
-  z-index: 1001;
+.popup-no-results {
+  padding: 32px;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 14px;
 }
 
-.user-list {
-  margin-top: 16px;
-}
-
-
-
-
-
-
-
+/* Chat History */
 .chat-history {
   flex: 1;
   overflow-y: auto;
-  margin-top: 20px;
+  padding: 0 16px;
 }
 
 .chat-history h4 {
-  margin: 10px 0;
-  color: #f1f1f1;
-  font-size: 14px;
+  margin: 20px 12px 12px;
+  color: var(--text-tertiary);
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  opacity: 0.8;
+  letter-spacing: 1px;
 }
-
-.chat-history ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  overflow: hidden;
-}
-
-.history-user {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  margin-bottom: 6px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: background 0.2s, transform 0.1s;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.history-user:hover {
-  background-color: #1e1e1e;
-  transform: translateX(2px);
-}
-
-.history-user.active {
-  background: rgba(255, 255, 255, 0.2);
-  font-weight: bold;
-  border-left: 4px solid #5a67d8;
-}
-
-.user-avatar {
-  background: linear-gradient(135deg, #5a67d8, #805ad5);
-  color: white;
-  font-weight: bold;
-  border-radius: 50%;
-  width: 42px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  font-size: 16px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-}
-
-.username {
-  font-size: 15px;
-  font-weight: 600;
-  color: #fff;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.last-message {
-  font-size: 13px;
-  color: #ddd;
-  opacity: 0.9;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.timestamp {
-  font-size: 12px;
-  color: #bbb;
-  opacity: 0.7;
-  margin-left: auto;
-}
-
-
 
 .chat-history-list {
   list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   margin: 0;
   padding: 0;
 }
 
 .history-user {
+  position: relative;
   display: flex;
   align-items: center;
-  padding: 10px 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-xl);
   cursor: pointer;
-  border-radius: 8px;
-  transition: background 0.2s ease;
+  transition: all var(--transition-base);
+  background: transparent;
 }
 
 .history-user:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-tertiary);
 }
 
 .history-user.active {
-  background: rgba(79, 156, 255, 0.15);
+  background: var(--bg-tertiary);
 }
 
 .user-avatar {
   position: relative;
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #4f9cff, #337fd9);
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--primary-500);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 16px;
-  margin-right: 12px;
+  font-size: 18px;
+  margin-right: 16px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .status-dot {
   position: absolute;
   bottom: 4px;
-  right: 4px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 2px solid white;
+  right: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  border: 3px solid var(--bg-primary);
 }
 
 .online-dot {
-  background-color: #2ecc71; /* Green */
-  box-shadow: 0 0 6px #2ecc71;
+  background: var(--online);
 }
 
 .offline-dot {
-  background-color: #bdc3c7; /* Gray */
+  background: var(--neutral-400);
 }
 
 .user-info {
-  display: flex;
-  flex-direction: column;
   flex: 1;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
 .username {
-  font-weight: 500;
-  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .last-message {
-  font-size: 13px;
-  color: #aaa;
+  font-size: 14px;
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .timestamp {
-  font-size: 12px;
-  color: #bbb;
+  font-size: 13px;
+  color: var(--text-tertiary);
   margin-left: auto;
+  flex-shrink: 0;
+  padding-top: 13px;
+  align-self: flex-start;
+  padding-left: 12px;
 }
-/* Delete button base */
+
+/* Unread badge */
+.history-user::after {
+  content: attr(data-unread);
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--primary-500);
+  color: white;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 700;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-user[data-unread]:not([data-unread=""])::after {
+  display: flex;
+}
+
 .delete-btn {
   position: absolute;
   right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 85, 85, 0.1);
-  border: 1.5px solid rgba(255, 85, 85, 0.3);
-  border-radius: 6px;
-  color: #ff5555;
-  font-size: 14px;
-  width: 28px;
-  height: 28px;
+  top: 30%;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 18px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all var(--transition-base);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-
-  /* ✨ Smooth opacity transition instead of flicker */
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease, background 0.3s ease, border 0.3s ease,
-    color 0.3s ease;
 }
 
-/* When parent <li> is hovered → show delete button */
 .history-user:hover .delete-btn {
   opacity: 1;
   pointer-events: auto;
 }
 
-/* Hover + Active animations */
 .delete-btn:hover {
-  background: rgba(255, 85, 85, 0.2);
-  border-color: rgba(255, 85, 85, 0.6);
-  color: #ff3333;
-  transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 2px 8px rgba(255, 85, 85, 0.3);
+  background: var(--neutral-300);
+  color: var(--error);
 }
 
 .delete-btn:active {
-  transform: translateY(-50%) scale(0.95);
-  background: rgba(255, 85, 85, 0.25);
-  transition: transform 0.1s ease;
+  background: var(--neutral-200);
 }
 
-/* Keep timestamp aligned, no jumping */
-.timestamp {
-  font-size: 12px;
-  color: #bbb;
-  margin-left: auto;
-}
-
-/* Parent positioning for absolute child */
-.history-user {
-  position: relative;
-  padding-right: 50px; /* reserve space for delete icon */
+/* User List */
+.user-list {
+  margin-top: 16px;
+  padding: 0 12px;
 }

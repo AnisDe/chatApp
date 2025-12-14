@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./loginPage.css";
+import "./editProfile.css";
 import axiosInstance from "../../lib/axios";
 const EditProfile = () => {
   const [username, setUsername] = useState("");
@@ -54,52 +54,48 @@ const EditProfile = () => {
   if (loading) return <p>Loading...</p>;
 
   return (
-    <div className="login-container">
-      <div className="login-left">
-        <div className="login-card">
-          <form onSubmit={handleSubmit} className="w-100">
-            <h2 className="h4 mb-4 text-center" style={{ color: "black" }}>Edit Profile</h2>
+    <div className="edit-profile-container">
+      <div className="edit-profile-left">
+        <div className="edit-profile-card">
+          <form onSubmit={handleSubmit} className="profile-form">
+            <h2 className="profile-title">Edit Profile</h2>
 
-            <div className="mb-3">
-              <label className="form-label">Username</label>
+            <div className="form-group">
+              <label className="profile-label">Username</label>
               <input
                 type="text"
                 placeholder={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="form-control"
+                className="profile-input"
                 required
               />
             </div>
 
-            <div className="mb-3">
-              <label className="form-label">Email</label>
+            <div className="form-group">
+              <label className="profile-label">Email</label>
               <input
                 type="email"
                 placeholder={email}
                 disabled
-                className="form-control-plaintext"
+                className="profile-input-disabled"
               />
             </div>
 
             {successMsg && (
-              <div className="alert alert-success py-2 message">
-                {successMsg}
-              </div>
+              <div className="alert alert-success">{successMsg}</div>
             )}
-            {errorMsg && (
-              <div className="alert alert-danger py-2 message">{errorMsg}</div>
-            )}
+            {errorMsg && <div className="alert alert-error">{errorMsg}</div>}
 
-            <button type="submit" disabled={saving} className="btn btn-primary">
+            <button type="submit" disabled={saving} className="save-btn">
               {saving ? "Saving..." : "Save"}
             </button>
           </form>
         </div>
       </div>
-       <div className="login-right">
-        <div className="promo">
-          <h2>Edit user</h2>
-          <p>
+      <div className="edit-profile-right">
+        <div className="promo-content">
+          <h2 className="promo-title">Edit user</h2>
+          <p className="promo-description">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Tenetur
             veniam voluptatem magni, obcaecati aperiam mollitia quisquam
             distinctio explicabo itaque cumque excepturi nesciunt doloremque

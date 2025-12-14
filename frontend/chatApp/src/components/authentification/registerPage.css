@@ -1,0 +1,364 @@
+/* === CSS Styles === */
+
+.register-container {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-secondary);
+}
+
+.register-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.register-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2rem;
+  text-align: center;
+  letter-spacing: -0.025em;
+}
+
+.register-form {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.register-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-size: 0.9375rem;
+  background: var(--bg-primary);
+  border: 2px solid var(--neutral-200);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  transition: all var(--transition-base);
+}
+
+.register-input:hover {
+  border-color: var(--neutral-300);
+  background: var(--bg-tertiary);
+}
+
+.register-input:focus {
+  border-color: var(--primary-500);
+  background: var(--bg-primary);
+  box-shadow: 0 0 0 3px var(--primary-50);
+}
+
+.register-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.register-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.register-password-input {
+  padding-right: 4rem;
+}
+
+.register-show-toggle {
+  position: absolute;
+  right: 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-500);
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--transition-base);
+  z-index: 2;
+}
+
+.register-show-toggle:hover {
+  color: var(--primary-600);
+}
+
+/* Password Requirements Popup */
+.password-requirements-popup {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  background: var(--bg-primary);
+  border: 2px solid var(--neutral-200);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  box-shadow: var(--shadow-lg);
+  z-index: 10;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.requirements-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.requirements-list li {
+  font-size: 0.875rem;
+  padding-left: 1.5rem;
+  position: relative;
+  transition: color var(--transition-base);
+}
+
+.requirements-list li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+}
+
+.requirement-valid {
+  color: var(--success);
+}
+
+.requirement-valid::before {
+  color: var(--success);
+}
+
+.requirement-invalid {
+  color: var(--text-tertiary);
+}
+
+.requirement-invalid::before {
+  content: "○";
+  color: var(--text-tertiary);
+}
+
+.register-btn {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--message-sent-text);
+  background: var(--primary-500);
+  border-radius: var(--radius-md);
+  margin-top: 0.5rem;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
+}
+
+.register-btn:hover {
+  background: var(--primary-600);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.register-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-xs);
+}
+
+.register-message {
+  font-size: 0.875rem;
+  color: var(--error);
+  min-height: 1.25rem;
+  text-align: center;
+  margin: -0.5rem 0 0;
+}
+
+/* Resend Section */
+.resend-section {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: var(--primary-50);
+  border: 2px solid var(--primary-200);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.resend-text {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.resend-btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-600);
+  background: var(--bg-primary);
+  border: 2px solid var(--primary-200);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+}
+
+.resend-btn:hover {
+  background: var(--primary-100);
+  border-color: var(--primary-400);
+}
+
+.resend-btn:active {
+  transform: scale(0.98);
+}
+
+.register-extra-links {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.register-extra-links a {
+  color: var(--text-secondary);
+  transition: color var(--transition-base);
+}
+
+.register-extra-links a:hover {
+  color: var(--primary-500);
+}
+
+.register-extra-links b {
+  color: var(--primary-500);
+  font-weight: 600;
+}
+
+/* Right Side - Promo Section */
+.register-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    var(--primary-500) 0%,
+    var(--primary-700) 100%
+  );
+  padding: 3rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.register-right::before {
+  content: "";
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  top: -200px;
+  right: -200px;
+}
+
+.register-right::after {
+  content: "";
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  bottom: -150px;
+  left: -150px;
+}
+
+.register-promo {
+  max-width: 480px;
+  z-index: 1;
+  position: relative;
+}
+
+.register-promo-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--neutral-0);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.025em;
+}
+
+.register-promo-description {
+  font-size: 1.125rem;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2rem;
+}
+
+.register-learn-btn {
+  padding: 0.875rem 2rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--primary-500);
+  background: var(--neutral-0);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-md);
+}
+
+.register-learn-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.register-learn-btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .register-container {
+    flex-direction: column;
+  }
+
+  .register-left {
+    max-width: 100%;
+  }
+
+  .register-right {
+    min-height: 400px;
+  }
+
+  .register-promo-title {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .register-left {
+    padding: 2rem 1rem;
+  }
+
+  .register-title {
+    font-size: 1.75rem;
+  }
+
+  .register-promo {
+    padding: 2rem 1rem;
+  }
+
+  .register-promo-title {
+    font-size: 1.75rem;
+  }
+
+  .register-promo-description {
+    font-size: 1rem;
+  }
+}

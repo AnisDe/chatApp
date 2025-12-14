@@ -96,9 +96,7 @@ const ChatInput = ({
           </button>
         </div>
 
-        <button onClick={handleSendClick} className="send-button">
-          Send
-        </button>
+        <button onClick={handleSendClick} className="send-button" />
       </div>
 
       {/* Image preview section */}

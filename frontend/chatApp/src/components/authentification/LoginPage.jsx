@@ -50,75 +50,64 @@ const LoginPage = () => {
 
   return (
     <div className="login-container">
-      {/* Left section */}
-      <div className="login-left">
-        <h2>Welcome back!</h2>
+      <h2>Welcome back!</h2>
 
-        <form onSubmit={handleSubmit}>
-          <label>
-            Username <span className="required">(required)</span>
-          </label>
+      <form onSubmit={handleSubmit}>
+        <label>
+          Username <span className="required">(required)</span>
+        </label>
+        <input
+          name="username"
+          type="text"
+          onChange={handleChange}
+          value={form.username}
+          placeholder="Username"
+          required
+          className="form-input"
+        />
+
+        <label>
+          Password <span className="required">(required)</span>
+        </label>
+        <div className="password-wrapper">
           <input
-            name="username"
-            type="text"
+            name="password"
             onChange={handleChange}
-            value={form.username}
-            placeholder="Username"
+            type={showPassword ? "text" : "password"}
+            value={form.password}
             required
-            className="form-input"
+            placeholder="Password"
+            className="form-input password-input"
           />
 
-          <label>
-            Password <span className="required">(required)</span>
-          </label>
-          <div className="password-wrapper">
-            <input
-              name="password"
-              onChange={handleChange}
-              type={showPassword ? "text" : "password"}
-              value={form.password}
-              required
-              placeholder="Password"
-              className="form-input password-input"
-            />
-
-            {form.password && (
-              <span
-                onClick={() => setShowPassword(!showPassword)}
-                className="show-toggle"
-              >
-                {showPassword ? "Hide" : "Show"}
-              </span>
-            )}
-          </div>
-
-          <p className='message'>{message}</p>
-          <button type="submit" className="sign-in-btn">
-            Sign In
-          </button>
-        </form>
-
-        <p className="extra-links">
-          <Link to="/forgot">
-            <b>Reset your password? </b>
-          </Link>
-        </p>
-
-        <p className="extra-links">
-          Don't have an account?{" "}
-          <Link to="/register">
-            <b>Sign up</b>
-          </Link>
-        </p>
-      </div>
-
-      {/* Right section */}
-      <div className="login-right">
-        <div className="promo">
-          <img src={loginImage} alt="Login Promo" height={400} width={450} />
-          <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. A ex</p>
+          {form.password && (
+            <span
+              onClick={() => setShowPassword(!showPassword)}
+              className="show-toggle"
+            >
+              {showPassword ? "Hide" : "Show"}
+            </span>
+          )}
         </div>
-      </div>
+
+        <p className="message">{message}</p>
+        <button type="submit" className="sign-in-btn">
+          Sign In
+        </button>
+      </form>
+
+      <p className="extra-links">
+        <Link to="/forgot">
+          <b>Reset your password? </b>
+        </Link>
+      </p>
+
+      <p className="extra-links">
+        Don't have an account?{" "}
+        <Link to="/register">
+          <b>Sign up</b>
+        </Link>
+      </p>
     </div>
   );
 };

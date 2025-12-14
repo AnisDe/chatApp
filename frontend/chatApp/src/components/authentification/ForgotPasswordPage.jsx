@@ -1,60 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Link } from "react-router";
-import axiosInstance from '../../lib/axios';
-import "./loginPage.css";
+import axiosInstance from "../../lib/axios";
+import "./forgotPasswordPage.css";
 
 const ForgotPasswordPage = () => {
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axiosInstance.post('/user/forgot', { email });
-      setMessage('Check your email to reset your password.');
+      await axiosInstance.post("/user/forgot", { email });
+      setMessage("Check your email to reset your password.");
     } catch (err) {
-      setMessage('Email not found or error occurred.');
+      setMessage("Email not found or error occurred.");
     }
   };
 
   return (
+    <div className="forgot-password-container">
+      <div className="forgot-password-content">
+        <h2 className="forgot-password-title">Reset Password</h2>
+        <p className="forgot-password-subtitle">
+          Enter your email address and we'll send you a link to reset your
+          password.
+        </p>
 
+        <form onSubmit={handleSubmit} className="forgot-password-form">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Your email"
+            className="forgot-password-input"
+            required
+          />
 
- <div className="login-container">
-      {/* Left section */}
-      <div className="login-left">
-        <h2>Welcome </h2>
+          <button type="submit" className="forgot-password-btn">
+            Send Reset Link
+          </button>
+          <p className="forgot-password-message">{message}</p>
+        </form>
 
-          <form onSubmit={handleSubmit}>
-      <input type='email' value={email} onChange={e => setEmail(e.target.value)} placeholder="Your email" required />
-      
-      <button type="submit">Send Reset Link</button>
-      <p className='message'>{message}</p>
-    </form>
-
-        <div className="extra-links">
-        
-            Don’t have an account? <Link to="/register" >Sign up for free.</Link>
-          
+        <div className="forgot-password-links">
+          Don't have an account?{" "}
+          <Link to="/register">
+            <b>Sign up for free.</b>
+          </Link>
         </div>
-      </div>
 
-      {/* Right section */}
-      <div className="login-right">
-        <div className="promo">
-          <h2>Authentication app</h2>
-          <p>
-           Lorem ipsum dolor sit amet consectetur adipisicing elit. Tenetur veniam voluptatem magni, obcaecati aperiam mollitia quisquam distinctio explicabo itaque cumque excepturi nesciunt doloremque unde consequuntur omnis cum provident. Animi, cupiditate.
-          </p>
-          <button className="learn-btn">Learn More ›</button>
+        <div className="forgot-password-links">
+          Remember your password?{" "}
+          <Link to="/login">
+            <b>Log in</b>
+          </Link>
         </div>
       </div>
     </div>
-
-
-
-
-  
   );
 };
 

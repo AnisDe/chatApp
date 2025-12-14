@@ -1,8 +1,0 @@
-.chat-container {
-  display: flex;
-  height: 100vh; /* Full screen height */
-  width: 100vw; /* Full screen width */
-  font-family: 'Inter', sans-serif;
-  overflow: hidden; /* Prevent scrolling of the container */
-}
-

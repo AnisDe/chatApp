@@ -20,12 +20,14 @@ const LoadingSpinner = () => <p>Loading...</p>;
 
 // Root redirect logic
 const RootRedirect = () => {
-
-  
   const { loggedIn, loading } = useAuth();
   if (loading) return <LoadingSpinner />;
 
-  return loggedIn ? <Navigate to="/chat" replace /> : <Navigate to="/login" replace />;
+  return loggedIn ? (
+    <Navigate to="/chat" replace />
+  ) : (
+    <Navigate to="/login" replace />
+  );
 };
 
 // Layout wrapper for protected pages
@@ -37,7 +39,7 @@ const ProtectedLayout = ({ children }) => (
 );
 
 export default function App() {
-    const { user } = useAuth();
+  const { user } = useAuth();
   return (
     <Router>
       <ToastContainer />
@@ -90,16 +92,16 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-       <Route
-  path="/chat"
-  element={
-    <ProtectedRoute>
-      <ProtectedLayout>
-        {user ? <Chat currentUserId={user._id} /> : <p>Loading...</p>}
-      </ProtectedLayout>
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <ProtectedLayout>
+                {user ? <Chat currentUserId={user._id} /> : <p>Loading...</p>}
+              </ProtectedLayout>
+            </ProtectedRoute>
+          }
+        />
 
         {/* Logout route */}
         <Route path="/logout" element={<Logout />} />
